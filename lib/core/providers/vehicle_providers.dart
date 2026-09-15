@@ -1,5 +1,6 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../services/api/vin_decoder_service.dart';
+import '../services/obd/real_obd_service.dart';
 import 'obd_providers.dart';
 import '../localization/locale_provider.dart';
 
@@ -84,10 +85,14 @@ class VehicleNotifier extends StateNotifier<VehicleState> {
       }
     } else {
       // Vehicle connected over OBD, but VIN Mode 09 PID 02 not exposed by ECU
+      String protoDesc = '';
+      if (obdService is RealOBDService && obdService.detectedProtocol.isNotEmpty) {
+        protoDesc = '${obdService.detectedProtocol} • ';
+      }
       state = state.copyWith(
         isLoading: false,
         vehicleName: s.connectedVehicle,
-        subtitle: s.activeObdLink,
+        subtitle: '$protoDesc${s.activeObdLink}',
       );
     }
   }

@@ -73,6 +73,12 @@ class RealOBDService implements OBDService {
         _currentCompleter = null;
         final partial = _rxBuffer.toString();
         _rxBuffer.clear();
+        // Interrupt hanging ELM327 operation by sending an empty \r
+        try {
+          await _bleService.writeData(ascii.encode('\r'));
+          await Future.delayed(const Duration(milliseconds: 80));
+          _rxBuffer.clear();
+        } catch (_) {}
         return partial;
       } catch (e) {
         _currentCompleter = null;
@@ -178,6 +184,8 @@ class RealOBDService implements OBDService {
     yield* _baroController.stream;
   }
 
+  String detectedProtocol = '';
+
   @override
   Future<void> connect() async {
     if (_bleService.connectedDevice != null) {
@@ -188,22 +196,79 @@ class RealOBDService implements OBDService {
   }
 
   Future<void> _initELM327() async {
-    debugPrint('Configuring ELM327 adapter...');
-    // Re-verify data stream listener
+    debugPrint('Configuring ELM327 adapter & locking ECU protocol...');
     _bleDataSub?.cancel();
     _bleDataSub = _bleService.dataStream.listen(_onDataReceived);
 
-    // Initial sequence: Reset, Echo off, Linefeeds off, Headers off, Auto protocol
+    // Initial sequence
     await Future.delayed(const Duration(milliseconds: 200));
-    await sendCommand('ATZ', timeout: const Duration(milliseconds: 1200));
-    await Future.delayed(const Duration(milliseconds: 300));
-    await sendCommand('ATE0', timeout: const Duration(milliseconds: 600));
-    await sendCommand('ATL0', timeout: const Duration(milliseconds: 600));
-    await sendCommand('ATH0', timeout: const Duration(milliseconds: 600));
-    await sendCommand('ATSP0', timeout: const Duration(milliseconds: 1200));
+    await sendCommand('ATZ', timeout: const Duration(milliseconds: 1500)); // Reset
+    await Future.delayed(const Duration(milliseconds: 500));
+    await sendCommand('ATE0', timeout: const Duration(milliseconds: 800)); // Echo off
+    await sendCommand('ATL0', timeout: const Duration(milliseconds: 800)); // Linefeeds off
+    await sendCommand('ATS0', timeout: const Duration(milliseconds: 800)); // Spaces off
+    await sendCommand('ATH0', timeout: const Duration(milliseconds: 800)); // Headers off
+    await sendCommand('ATAT1', timeout: const Duration(milliseconds: 800)); // Adaptive timing
+    await sendCommand('ATAL', timeout: const Duration(milliseconds: 800)); // Allow long messages
 
-    // Warm-up query to lock into the CAN / K-Line protocol
-    await sendCommand('0100', timeout: const Duration(milliseconds: 2000));
+    // Multi-protocol ECU handshake
+    bool busConnected = false;
+
+    // 1. Try Automatic protocol search (give up to 9 seconds)
+    await sendCommand('ATSP0', timeout: const Duration(milliseconds: 1000));
+    debugPrint('[OBD] Searching protocol with 0100 (auto)...');
+    String res = await sendCommand('0100', timeout: const Duration(seconds: 9));
+    debugPrint('[OBD] ATSP0 result: $res');
+
+    final cleanRes = res.replaceAll(' ', '').toUpperCase();
+    if (cleanRes.contains('4100')) {
+      busConnected = true;
+    }
+
+    // 2. If Auto failed or timed out, try Protocol 6 (ISO 15765-4 CAN 11/500 - 90% of cars)
+    if (!busConnected) {
+      debugPrint('[OBD] Auto failed. Trying Protocol 6 (CAN 11/500)...');
+      await sendCommand('ATSP6', timeout: const Duration(milliseconds: 1000));
+      res = await sendCommand('0100', timeout: const Duration(seconds: 4));
+      debugPrint('[OBD] ATSP6 result: $res');
+      if (res.replaceAll(' ', '').toUpperCase().contains('4100')) {
+        busConnected = true;
+      }
+    }
+
+    // 3. If still not connected, try Protocol 7 (ISO 15765-4 CAN 29/500)
+    if (!busConnected) {
+      debugPrint('[OBD] Trying Protocol 7 (CAN 29/500)...');
+      await sendCommand('ATSP7', timeout: const Duration(milliseconds: 1000));
+      res = await sendCommand('0100', timeout: const Duration(seconds: 4));
+      debugPrint('[OBD] ATSP7 result: $res');
+      if (res.replaceAll(' ', '').toUpperCase().contains('4100')) {
+        busConnected = true;
+      }
+    }
+
+    // 4. If still not connected, try Protocol 8 (CAN 11/250)
+    if (!busConnected) {
+      debugPrint('[OBD] Trying Protocol 8 (CAN 11/250)...');
+      await sendCommand('ATSP8', timeout: const Duration(milliseconds: 1000));
+      res = await sendCommand('0100', timeout: const Duration(seconds: 4));
+      debugPrint('[OBD] ATSP8 result: $res');
+      if (res.replaceAll(' ', '').toUpperCase().contains('4100')) {
+        busConnected = true;
+      }
+    }
+
+    // 5. If still not connected, fallback to ATSP0
+    if (!busConnected) {
+      debugPrint('[OBD] Fallback to ATSP0...');
+      await sendCommand('ATSP0', timeout: const Duration(milliseconds: 1000));
+      await sendCommand('0100', timeout: const Duration(seconds: 5));
+    }
+
+    // Read active protocol description
+    final proto = await sendCommand('ATDP', timeout: const Duration(milliseconds: 1000));
+    detectedProtocol = proto.replaceAll('>', '').replaceAll('\r', '').replaceAll('\n', '').trim();
+    debugPrint('[OBD] Active ECU Protocol: $detectedProtocol');
 
     _startPolling();
   }
@@ -246,15 +311,21 @@ class RealOBDService implements OBDService {
         }
         cycle = (cycle + 1) % 12;
 
-        final raw = await sendCommand(cmd, timeout: const Duration(milliseconds: 600));
+        final raw = await sendCommand(cmd, timeout: const Duration(milliseconds: 900));
         if (!_isConnected || !_isPollingActive) break;
 
         if (raw.isNotEmpty) {
-          _parseResponse(raw);
+          // If we got UNABLE TO CONNECT or BUS ERROR, attempt a single 0100 re-wake
+          if (raw.contains('UNABLE TO CONNECT') || raw.contains('BUS INIT')) {
+            debugPrint('[OBD] Bus lost, re-pinging 0100...');
+            await sendCommand('0100', timeout: const Duration(seconds: 3));
+          } else {
+            _parseResponse(raw);
+          }
         }
 
         // Brief delay between commands to keep the CAN bus responsive
-        await Future.delayed(const Duration(milliseconds: 30));
+        await Future.delayed(const Duration(milliseconds: 35));
       } catch (e) {
         await Future.delayed(const Duration(milliseconds: 100));
       }
