@@ -14,6 +14,11 @@ class MockOBDService implements OBDService {
   final _intakeTempController = StreamController<double>.broadcast();
   final _mafController = StreamController<double>.broadcast();
   final _turboBoostController = StreamController<double>.broadcast();
+  final _stftController = StreamController<double>.broadcast();
+  final _ltftController = StreamController<double>.broadcast();
+  final _timingController = StreamController<double>.broadcast();
+  final _fuelLevelController = StreamController<double>.broadcast();
+  final _baroController = StreamController<double>.broadcast();
 
   Timer? _dataTimer;
   bool _isConnected = false; // Start DISCONNECTED by default
@@ -86,6 +91,36 @@ class MockOBDService implements OBDService {
     yield* _turboBoostController.stream;
   }
 
+  @override
+  Stream<double> get stftStream async* {
+    yield _isConnected ? 1.5 : 0.0;
+    yield* _stftController.stream;
+  }
+
+  @override
+  Stream<double> get ltftStream async* {
+    yield _isConnected ? 2.3 : 0.0;
+    yield* _ltftController.stream;
+  }
+
+  @override
+  Stream<double> get timingAdvanceStream async* {
+    yield _isConnected ? 14.0 : 0.0;
+    yield* _timingController.stream;
+  }
+
+  @override
+  Stream<double> get fuelLevelStream async* {
+    yield _isConnected ? 68.0 : 0.0;
+    yield* _fuelLevelController.stream;
+  }
+
+  @override
+  Stream<double> get baroStream async* {
+    yield _isConnected ? 101.3 : 0.0;
+    yield* _baroController.stream;
+  }
+
   bool get isConnected => _isConnected;
 
   @override
@@ -114,6 +149,11 @@ class MockOBDService implements OBDService {
     _intakeTempController.add(0);
     _mafController.add(0);
     _turboBoostController.add(0);
+    _stftController.add(0);
+    _ltftController.add(0);
+    _timingController.add(0);
+    _fuelLevelController.add(0);
+    _baroController.add(0);
   }
 
   void _startSimulatingData() {
@@ -136,6 +176,13 @@ class MockOBDService implements OBDService {
       // Simulate turbo boost: 0 to 1.2 Bar depending on RPM and Load
       final boost = ((_currentRpm - 1500) / 3000 * 1.2).clamp(0.0, 1.2) + (_random.nextDouble() * 0.1);
       _turboBoostController.add(boost);
+
+      // Expanded PIDs
+      _stftController.add((-1.0 + _random.nextDouble() * 3.5).clamp(-15.0, 15.0));
+      _ltftController.add(2.0 + _random.nextDouble() * 1.2);
+      _timingController.add((12.0 + (_currentRpm / 220) + _random.nextDouble() * 2.5).clamp(5.0, 40.0));
+      _fuelLevelController.add(68.0);
+      _baroController.add(101.3 + _random.nextDouble() * 0.3);
     });
   }
 
@@ -148,6 +195,7 @@ class MockOBDService implements OBDService {
         description: 'Fallo de encendido en Cilindro 1 (Misfire)',
         severity: 'High',
         system: 'Powertrain / Engine (PCM)',
+        status: 'confirmed',
         timestamp: DateTime.now().subtract(const Duration(hours: 2)),
         probableCauses: [
           'Bujía desgastada, con carbón o electrodo dañado',
@@ -168,6 +216,7 @@ class MockOBDService implements OBDService {
         description: 'Mezcla de Combustible Demasiado Pobre (Banco 1)',
         severity: 'Medium',
         system: 'Fuel & Air Metering',
+        status: 'pending',
         timestamp: DateTime.now().subtract(const Duration(hours: 5)),
         probableCauses: [
           'Fuga de vacío en mangueras de admisión o múltiple',
@@ -187,6 +236,7 @@ class MockOBDService implements OBDService {
         description: 'Eficiencia del Catalizador por Debajo del Umbral (Banco 1)',
         severity: 'Medium',
         system: 'Emissions & Exhaust Control',
+        status: 'permanent',
         timestamp: DateTime.now().subtract(const Duration(days: 1)),
         probableCauses: [
           'Convertidor catalítico degradado o contaminado por aceite/gasolina',

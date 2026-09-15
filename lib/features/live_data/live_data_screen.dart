@@ -16,6 +16,7 @@ class LiveDataScreen extends ConsumerStatefulWidget {
 class _LiveDataScreenState extends ConsumerState<LiveDataScreen> {
   final List<FlSpot> _rpmSpots = [];
   int _pointCounter = 0;
+  int _selectedCategory = 0; // 0: All, 1: Engine, 2: Intake, 3: Fuel & Battery
 
   @override
   Widget build(BuildContext context) {
@@ -28,6 +29,13 @@ class _LiveDataScreenState extends ConsumerState<LiveDataScreen> {
     final intakeAsync = ref.watch(intakeTempStreamProvider);
     final mafAsync = ref.watch(mafStreamProvider);
 
+    final stftAsync = ref.watch(stftStreamProvider);
+    final ltftAsync = ref.watch(ltftStreamProvider);
+    final timingAsync = ref.watch(timingAdvanceStreamProvider);
+    final fuelLevelAsync = ref.watch(fuelLevelStreamProvider);
+    final baroAsync = ref.watch(baroStreamProvider);
+    final turboAsync = ref.watch(turboBoostStreamProvider);
+
     final rpm = rpmAsync.value ?? 1840.0;
     final speed = speedAsync.value ?? 48.0;
     final coolant = coolantAsync.value ?? 91.0;
@@ -36,6 +44,12 @@ class _LiveDataScreenState extends ConsumerState<LiveDataScreen> {
     final battery = batteryAsync.value ?? 14.2;
     final intake = intakeAsync.value ?? 28.0;
     final maf = mafAsync.value ?? 4.8;
+    final turbo = turboAsync.value ?? 0.0;
+    final stft = stftAsync.value ?? 1.5;
+    final ltft = ltftAsync.value ?? 2.3;
+    final timing = timingAsync.value ?? 14.0;
+    final fuelLevel = fuelLevelAsync.value ?? 68.0;
+    final baro = baroAsync.value ?? 101.3;
 
     // Accumulate points for chart
     if (_rpmSpots.isEmpty || _rpmSpots.last.y != rpm) {
@@ -47,6 +61,106 @@ class _LiveDataScreenState extends ConsumerState<LiveDataScreen> {
     }
 
     final s = ref.watch(stringsProvider);
+
+    // Build list of sensors with category tags
+    final allCards = [
+      // Category 1: Engine & Performance
+      _SensorData(
+        category: 1,
+        title: s.engineLoadSensor,
+        value: '${load.toInt()} %',
+        status: s.statusNormal,
+        icon: Icons.speed_rounded,
+      ),
+      _SensorData(
+        category: 1,
+        title: s.throttlePosSensor,
+        value: '${throttle.toInt()} %',
+        status: s.statusNormal,
+        icon: Icons.gamepad_rounded,
+      ),
+      _SensorData(
+        category: 1,
+        title: s.turboBoostSensor,
+        value: '${turbo.toStringAsFixed(2)} BAR',
+        status: s.boostActive,
+        icon: Icons.compress_rounded,
+      ),
+      _SensorData(
+        category: 1,
+        title: s.timingAdvanceSensor,
+        value: '${timing.toStringAsFixed(1)}°',
+        status: s.statusNormal,
+        icon: Icons.av_timer_rounded,
+      ),
+      // Category 2: Intake & Temp
+      _SensorData(
+        category: 2,
+        title: s.coolantTempSensor,
+        value: '${coolant.toInt()} °C',
+        status: coolant > 105 ? s.statusHigh : s.statusNormal,
+        icon: Icons.thermostat_rounded,
+        isAlert: coolant > 105,
+      ),
+      _SensorData(
+        category: 2,
+        title: s.intakeAirSensor,
+        value: '${intake.toInt()} °C',
+        status: s.statusNormal,
+        icon: Icons.air_rounded,
+      ),
+      _SensorData(
+        category: 2,
+        title: s.massAirFlowSensor,
+        value: '${maf.toStringAsFixed(1)} g/s',
+        status: s.statusNormal,
+        icon: Icons.grain_rounded,
+      ),
+      _SensorData(
+        category: 2,
+        title: s.baroPressureSensor,
+        value: '${baro.toStringAsFixed(1)} kPa',
+        status: s.statusNormal,
+        icon: Icons.speed_outlined,
+      ),
+      // Category 3: Fuel & Battery
+      _SensorData(
+        category: 3,
+        title: s.stftSensor,
+        value: '${stft >= 0 ? '+' : ''}${stft.toStringAsFixed(1)} %',
+        status: stft.abs() > 10 ? s.statusHigh : s.statusNormal,
+        icon: Icons.local_gas_station_rounded,
+        isAlert: stft.abs() > 10,
+      ),
+      _SensorData(
+        category: 3,
+        title: s.ltftSensor,
+        value: '${ltft >= 0 ? '+' : ''}${ltft.toStringAsFixed(1)} %',
+        status: ltft.abs() > 10 ? s.statusHigh : s.statusNormal,
+        icon: Icons.tune_rounded,
+        isAlert: ltft.abs() > 10,
+      ),
+      _SensorData(
+        category: 3,
+        title: s.alternatorVoltSensor,
+        value: '${battery.toStringAsFixed(1)} V',
+        status: battery < 12.5 ? s.statusLow : s.statusOptimal,
+        icon: Icons.battery_charging_full_rounded,
+        isAlert: battery < 12.5,
+      ),
+      _SensorData(
+        category: 3,
+        title: s.fuelLevelSensor,
+        value: '${fuelLevel.toInt()} %',
+        status: fuelLevel < 15 ? s.statusLow : s.statusNormal,
+        icon: Icons.ev_station_rounded,
+        isAlert: fuelLevel < 15,
+      ),
+    ];
+
+    final filteredCards = _selectedCategory == 0
+        ? allCards
+        : allCards.where((c) => c.category == _selectedCategory).toList();
 
     return Scaffold(
       backgroundColor: AppTheme.background,
@@ -216,75 +330,100 @@ class _LiveDataScreenState extends ConsumerState<LiveDataScreen> {
 
               const SizedBox(height: 20),
 
-              Text(
-                s.engineParametersPids,
-                style: GoogleFonts.outfit(
-                  fontSize: 13,
-                  fontWeight: FontWeight.w700,
-                  letterSpacing: 1.2,
-                  color: AppTheme.muted,
-                ),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Text(
+                    s.engineParametersPids,
+                    style: GoogleFonts.outfit(
+                      fontSize: 13,
+                      fontWeight: FontWeight.w700,
+                      letterSpacing: 1.2,
+                      color: AppTheme.muted,
+                    ),
+                  ),
+                  Text(
+                    '${filteredCards.length} ACTIVOS',
+                    style: GoogleFonts.sourceCodePro(
+                      fontSize: 11,
+                      fontWeight: FontWeight.w700,
+                      color: AppTheme.secondary,
+                    ),
+                  ),
+                ],
               ),
 
               const SizedBox(height: 12),
 
+              // Category Selector Chips
+              SingleChildScrollView(
+                scrollDirection: Axis.horizontal,
+                child: Row(
+                  children: [
+                    _buildCategoryChip(0, s.allSensorsTab),
+                    const SizedBox(width: 8),
+                    _buildCategoryChip(1, s.engineTab),
+                    const SizedBox(width: 8),
+                    _buildCategoryChip(2, s.intakeTab),
+                    const SizedBox(width: 8),
+                    _buildCategoryChip(3, s.fuelElectricTab),
+                  ],
+                ),
+              ),
+
+              const SizedBox(height: 14),
+
               // Sensors Grid
-              GridView.count(
+              GridView.builder(
                 shrinkWrap: true,
                 physics: const NeverScrollableScrollPhysics(),
-                crossAxisCount: 2,
-                crossAxisSpacing: 12,
-                mainAxisSpacing: 12,
-                childAspectRatio: 1.5,
-                children: [
-                  _buildSensorCard(
-                    title: s.coolantTempSensor,
-                    value: '${coolant.toInt()} °C',
-                    status: coolant > 105 ? s.statusHigh : s.statusNormal,
-                    icon: Icons.thermostat_rounded,
-                    isAlert: coolant > 105,
-                  ),
-                  _buildSensorCard(
-                    title: s.engineLoadSensor,
-                    value: '${load.toInt()} %',
-                    status: s.statusNormal,
-                    icon: Icons.speed_rounded,
-                  ),
-                  _buildSensorCard(
-                    title: s.throttlePosSensor,
-                    value: '${throttle.toInt()} %',
-                    status: s.statusNormal,
-                    icon: Icons.gamepad_rounded,
-                  ),
-                  _buildSensorCard(
-                    title: s.alternatorVoltSensor,
-                    value: '${battery.toStringAsFixed(1)} V',
-                    status: battery < 12.5 ? s.statusLow : s.statusOptimal,
-                    icon: Icons.battery_charging_full_rounded,
-                    isAlert: battery < 12.5,
-                  ),
-                  _buildSensorCard(
-                    title: s.intakeAirSensor,
-                    value: '${intake.toInt()} °C',
-                    status: s.statusNormal,
-                    icon: Icons.air_rounded,
-                  ),
-                  _buildSensorCard(
-                    title: s.massAirFlowSensor,
-                    value: '${maf.toStringAsFixed(1)} g/s',
-                    status: s.statusNormal,
-                    icon: Icons.grain_rounded,
-                  ),
-                  _buildSensorCard(
-                    title: s.turboBoostSensor,
-                    value: '${(ref.watch(turboBoostStreamProvider).value ?? 0.0).toStringAsFixed(2)} BAR',
-                    status: s.boostActive,
-                    icon: Icons.speed_rounded,
-                  ),
-                ],
+                gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                  crossAxisCount: 2,
+                  crossAxisSpacing: 12,
+                  mainAxisSpacing: 12,
+                  childAspectRatio: 1.45,
+                ),
+                itemCount: filteredCards.length,
+                itemBuilder: (context, index) {
+                  final c = filteredCards[index];
+                  return _buildSensorCard(
+                    title: c.title,
+                    value: c.value,
+                    status: c.status,
+                    icon: c.icon,
+                    isAlert: c.isAlert,
+                  );
+                },
               ),
               const SizedBox(height: 24),
             ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildCategoryChip(int index, String label) {
+    final isSelected = _selectedCategory == index;
+    return InkWell(
+      borderRadius: BorderRadius.circular(10),
+      onTap: () => setState(() => _selectedCategory = index),
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+        decoration: BoxDecoration(
+          color: isSelected ? AppTheme.secondary.withValues(alpha: 0.2) : AppTheme.surface,
+          borderRadius: BorderRadius.circular(10),
+          border: Border.all(
+            color: isSelected ? AppTheme.secondary : AppTheme.border,
+            width: isSelected ? 1.2 : 1.0,
+          ),
+        ),
+        child: Text(
+          label,
+          style: GoogleFonts.outfit(
+            fontSize: 11,
+            fontWeight: isSelected ? FontWeight.w800 : FontWeight.w600,
+            color: isSelected ? AppTheme.secondary : AppTheme.muted,
           ),
         ),
       ),
@@ -439,4 +578,22 @@ class _LiveDataScreenState extends ConsumerState<LiveDataScreen> {
       ),
     );
   }
+}
+
+class _SensorData {
+  final int category;
+  final String title;
+  final String value;
+  final String status;
+  final IconData icon;
+  final bool isAlert;
+
+  const _SensorData({
+    required this.category,
+    required this.title,
+    required this.value,
+    required this.status,
+    required this.icon,
+    this.isAlert = false,
+  });
 }

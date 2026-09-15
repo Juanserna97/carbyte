@@ -332,6 +332,23 @@ class DiagnosticPdfService {
   }
 
   static pw.Widget _buildDtcItem(DTCModel dtc) {
+    PdfColor dtcBgColor = PdfColor.fromHex('#FFEBEE');
+    PdfColor dtcBorderColor = PdfColors.red400;
+    PdfColor dtcTextColor = PdfColors.red900;
+    String statusText = 'CONFIRMADO (MIL)';
+
+    if (dtc.status == 'pending') {
+      dtcBgColor = PdfColor.fromHex('#FFF3E0');
+      dtcBorderColor = PdfColors.orange400;
+      dtcTextColor = PdfColors.orange900;
+      statusText = 'PENDIENTE';
+    } else if (dtc.status == 'permanent') {
+      dtcBgColor = PdfColor.fromHex('#E0F2FE');
+      dtcBorderColor = PdfColors.blue400;
+      dtcTextColor = PdfColors.blue900;
+      statusText = 'PERMANENTE';
+    }
+
     return pw.Container(
       margin: const pw.EdgeInsets.only(bottom: 10),
       padding: const pw.EdgeInsets.all(12),
@@ -346,21 +363,42 @@ class DiagnosticPdfService {
           pw.Row(
             mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
             children: [
-              pw.Container(
-                padding: const pw.EdgeInsets.symmetric(horizontal: 8, vertical: 3),
-                decoration: pw.BoxDecoration(
-                  color: PdfColor.fromHex('#FFEBEE'),
-                  borderRadius: pw.BorderRadius.circular(4),
-                  border: pw.Border.all(color: PdfColors.red400),
-                ),
-                child: pw.Text(
-                  dtc.code,
-                  style: pw.TextStyle(
-                    fontSize: 12,
-                    fontWeight: pw.FontWeight.bold,
-                    color: PdfColors.red900,
+              pw.Row(
+                children: [
+                  pw.Container(
+                    padding: const pw.EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                    decoration: pw.BoxDecoration(
+                      color: dtcBgColor,
+                      borderRadius: pw.BorderRadius.circular(4),
+                      border: pw.Border.all(color: dtcBorderColor),
+                    ),
+                    child: pw.Text(
+                      dtc.code,
+                      style: pw.TextStyle(
+                        fontSize: 12,
+                        fontWeight: pw.FontWeight.bold,
+                        color: dtcTextColor,
+                      ),
+                    ),
                   ),
-                ),
+                  pw.SizedBox(width: 6),
+                  pw.Container(
+                    padding: const pw.EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                    decoration: pw.BoxDecoration(
+                      color: dtcBgColor,
+                      borderRadius: pw.BorderRadius.circular(4),
+                      border: pw.Border.all(color: dtcBorderColor, width: 0.5),
+                    ),
+                    child: pw.Text(
+                      statusText,
+                      style: pw.TextStyle(
+                        fontSize: 7.5,
+                        fontWeight: pw.FontWeight.bold,
+                        color: dtcTextColor,
+                      ),
+                    ),
+                  ),
+                ],
               ),
               pw.Text(
                 'MÓDULO: ${dtc.system.toUpperCase()}',

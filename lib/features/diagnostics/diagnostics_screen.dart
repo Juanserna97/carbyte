@@ -20,6 +20,7 @@ class DiagnosticsScreen extends ConsumerStatefulWidget {
 
 class _DiagnosticsScreenState extends ConsumerState<DiagnosticsScreen> {
   bool _showMonitorsDetails = false;
+  String _dtcFilter = 'all'; // 'all', 'confirmed', 'pending', 'permanent'
 
   @override
   void initState() {
@@ -316,17 +317,49 @@ class _DiagnosticsScreenState extends ConsumerState<DiagnosticsScreen> {
           const SizedBox(height: 24),
 
           // 3. DTC List Section Header
-          Text(
-            'CÓDIGOS DE DIAGNÓSTICO (DTC)',
-            style: GoogleFonts.outfit(
-              fontSize: 12,
-              fontWeight: FontWeight.w800,
-              letterSpacing: 1.2,
-              color: AppTheme.muted,
-            ),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Text(
+                'CÓDIGOS DE DIAGNÓSTICO (DTC)',
+                style: GoogleFonts.outfit(
+                  fontSize: 12,
+                  fontWeight: FontWeight.w800,
+                  letterSpacing: 1.2,
+                  color: AppTheme.muted,
+                ),
+              ),
+              if (issuesCount > 0)
+                Text(
+                  '$issuesCount REGISTRADOS',
+                  style: GoogleFonts.sourceCodePro(
+                    fontSize: 11,
+                    fontWeight: FontWeight.w700,
+                    color: AppTheme.error,
+                  ),
+                ),
+            ],
           ),
 
           const SizedBox(height: 12),
+
+          if (issuesCount > 0) ...[
+            SingleChildScrollView(
+              scrollDirection: Axis.horizontal,
+              child: Row(
+                children: [
+                  _buildDtcFilterChip('all', '${s.dtcFilterAll} ($issuesCount)'),
+                  const SizedBox(width: 8),
+                  _buildDtcFilterChip('confirmed', '${s.dtcFilterConfirmed} (${scanState.foundDTCs.where((d) => d.status == 'confirmed').length})'),
+                  const SizedBox(width: 8),
+                  _buildDtcFilterChip('pending', '${s.dtcFilterPending} (${scanState.foundDTCs.where((d) => d.status == 'pending').length})'),
+                  const SizedBox(width: 8),
+                  _buildDtcFilterChip('permanent', '${s.dtcFilterPermanent} (${scanState.foundDTCs.where((d) => d.status == 'permanent').length})'),
+                ],
+              ),
+            ),
+            const SizedBox(height: 14),
+          ],
 
           if (issuesCount == 0)
             Container(
@@ -344,8 +377,11 @@ class _DiagnosticsScreenState extends ConsumerState<DiagnosticsScreen> {
                 ),
               ),
             )
-          else
-            ...scanState.foundDTCs.map((dtc) => _buildDtcItemCard(dtc)),
+          else ...[
+            ...scanState.foundDTCs
+                .where((dtc) => _dtcFilter == 'all' || dtc.status == _dtcFilter)
+                .map((dtc) => _buildDtcItemCard(dtc, s)),
+          ],
 
           const SizedBox(height: 24),
 
@@ -598,7 +634,42 @@ class _DiagnosticsScreenState extends ConsumerState<DiagnosticsScreen> {
     );
   }
 
-  Widget _buildDtcItemCard(DTCModel dtc) {
+  Widget _buildDtcFilterChip(String filterKey, String label) {
+    final isSelected = _dtcFilter == filterKey;
+    return InkWell(
+      borderRadius: BorderRadius.circular(10),
+      onTap: () => setState(() => _dtcFilter = filterKey),
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+        decoration: BoxDecoration(
+          color: isSelected ? AppTheme.primary.withValues(alpha: 0.25) : AppTheme.surface,
+          borderRadius: BorderRadius.circular(10),
+          border: Border.all(
+            color: isSelected ? AppTheme.primary : AppTheme.border,
+            width: isSelected ? 1.2 : 1.0,
+          ),
+        ),
+        child: Text(
+          label,
+          style: GoogleFonts.outfit(
+            fontSize: 11,
+            fontWeight: isSelected ? FontWeight.w800 : FontWeight.w600,
+            color: isSelected ? AppTheme.text : AppTheme.muted,
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildDtcItemCard(DTCModel dtc, AppStrings s) {
+    final statusColor = dtc.status == 'pending'
+        ? AppTheme.warning
+        : (dtc.status == 'permanent' ? const Color(0xFF38BDF8) : AppTheme.error);
+
+    final statusLabel = dtc.status == 'pending'
+        ? s.dtcStatusPending
+        : (dtc.status == 'permanent' ? s.dtcStatusPermanent : s.dtcStatusConfirmed);
+
     return Container(
       margin: const EdgeInsets.only(bottom: 12),
       decoration: BoxDecoration(
@@ -621,45 +692,57 @@ class _DiagnosticsScreenState extends ConsumerState<DiagnosticsScreen> {
                     Container(
                       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
                       decoration: BoxDecoration(
-                        color: AppTheme.error.withValues(alpha: 0.12),
+                        color: statusColor.withValues(alpha: 0.12),
                         borderRadius: BorderRadius.circular(8),
-                        border: Border.all(color: AppTheme.error.withValues(alpha: 0.3)),
+                        border: Border.all(color: statusColor.withValues(alpha: 0.3)),
                       ),
                       child: Text(
                         dtc.code,
                         style: GoogleFonts.sourceCodePro(
-                          color: AppTheme.error,
+                          color: statusColor,
                           fontSize: 15,
                           fontWeight: FontWeight.w800,
                         ),
                       ),
                     ),
-                    const SizedBox(width: 14),
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            dtc.description,
-                            style: GoogleFonts.outfit(
-                              fontSize: 14,
-                              fontWeight: FontWeight.w700,
-                              color: AppTheme.text,
-                            ),
-                          ),
-                          const SizedBox(height: 2),
-                          Text(
-                            '${dtc.system} • Severidad: ${dtc.severity}',
-                            style: GoogleFonts.outfit(
-                              fontSize: 11,
-                              color: AppTheme.muted,
-                            ),
-                          ),
-                        ],
+                    const SizedBox(width: 8),
+                    Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                      decoration: BoxDecoration(
+                        color: statusColor.withValues(alpha: 0.1),
+                        borderRadius: BorderRadius.circular(6),
+                        border: Border.all(color: statusColor.withValues(alpha: 0.3)),
+                      ),
+                      child: Text(
+                        statusLabel,
+                        style: GoogleFonts.outfit(
+                          fontSize: 9,
+                          fontWeight: FontWeight.w800,
+                          letterSpacing: 0.5,
+                          color: statusColor,
+                        ),
                       ),
                     ),
+                    const Spacer(),
                     const Icon(Icons.chevron_right_rounded, color: AppTheme.muted, size: 20),
                   ],
+                ),
+                const SizedBox(height: 10),
+                Text(
+                  dtc.description,
+                  style: GoogleFonts.outfit(
+                    fontSize: 14,
+                    fontWeight: FontWeight.w700,
+                    color: AppTheme.text,
+                  ),
+                ),
+                const SizedBox(height: 2),
+                Text(
+                  '${dtc.system} • Severidad: ${dtc.severity}',
+                  style: GoogleFonts.outfit(
+                    fontSize: 11,
+                    color: AppTheme.muted,
+                  ),
                 ),
                 if (dtc.probableCauses.isNotEmpty) ...[
                   const SizedBox(height: 10),

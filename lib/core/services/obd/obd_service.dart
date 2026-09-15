@@ -13,6 +13,11 @@ abstract class OBDService {
   Stream<double> get intakeTempStream;
   Stream<double> get mafStream;
   Stream<double> get turboBoostStream; // In Bar or PSI
+  Stream<double> get stftStream; // Short Term Fuel Trim %
+  Stream<double> get ltftStream; // Long Term Fuel Trim %
+  Stream<double> get timingAdvanceStream; // In degrees
+  Stream<double> get fuelLevelStream; // In %
+  Stream<double> get baroStream; // In kPa
 
   Future<void> connect();
   Future<void> disconnect();

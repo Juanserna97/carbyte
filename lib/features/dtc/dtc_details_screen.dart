@@ -184,16 +184,55 @@ class DtcDetailsScreen extends ConsumerWidget {
                         height: 1.2,
                       ),
                     ),
-                    const SizedBox(height: 6),
-                    Text(
-                      activeSystem,
-                      style: GoogleFonts.outfit(
-                        fontSize: 13,
-                        fontWeight: FontWeight.w600,
-                        color: AppTheme.secondary,
-                      ),
-                    ),
                     const SizedBox(height: 14),
+                    // Status Badge and System
+                    Row(
+                      children: [
+                        Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                          decoration: BoxDecoration(
+                            color: (dtc?.status == 'pending'
+                                    ? AppTheme.warning
+                                    : (dtc?.status == 'permanent' ? const Color(0xFF38BDF8) : AppTheme.error))
+                                .withValues(alpha: 0.15),
+                            borderRadius: BorderRadius.circular(6),
+                            border: Border.all(
+                              color: (dtc?.status == 'pending'
+                                      ? AppTheme.warning
+                                      : (dtc?.status == 'permanent' ? const Color(0xFF38BDF8) : AppTheme.error))
+                                  .withValues(alpha: 0.4),
+                            ),
+                          ),
+                          child: Text(
+                            dtc?.status == 'pending'
+                                ? s.dtcStatusPending
+                                : (dtc?.status == 'permanent' ? s.dtcStatusPermanent : s.dtcStatusConfirmed),
+                            style: GoogleFonts.outfit(
+                              fontSize: 10,
+                              fontWeight: FontWeight.w800,
+                              letterSpacing: 0.6,
+                              color: dtc?.status == 'pending'
+                                  ? AppTheme.warning
+                                  : (dtc?.status == 'permanent' ? const Color(0xFF38BDF8) : AppTheme.error),
+                            ),
+                          ),
+                        ),
+                        const SizedBox(width: 8),
+                        Expanded(
+                          child: Text(
+                            activeSystem,
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                            style: GoogleFonts.outfit(
+                              fontSize: 12,
+                              fontWeight: FontWeight.w600,
+                              color: AppTheme.secondary,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 12),
                     // Severity Bar
                     ClipRRect(
                       borderRadius: BorderRadius.circular(6),

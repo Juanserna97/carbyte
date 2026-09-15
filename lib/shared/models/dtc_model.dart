@@ -7,6 +7,7 @@ class DTCModel {
   final List<String> probableCauses;
   final List<String> symptoms;
   final String recommendedAction;
+  final String status; // 'confirmed', 'pending', 'permanent'
 
   const DTCModel({
     required this.code,
@@ -17,6 +18,7 @@ class DTCModel {
     this.probableCauses = const [],
     this.symptoms = const [],
     this.recommendedAction = '',
+    this.status = 'confirmed',
   });
 
   factory DTCModel.fromJson(Map<String, dynamic> json) {
@@ -37,6 +39,7 @@ class DTCModel {
               .toList() ??
           const [],
       recommendedAction: (json['recommendedAction'] as String?) ?? '',
+      status: (json['status'] as String?) ?? 'confirmed',
     );
   }
 
@@ -50,6 +53,7 @@ class DTCModel {
       'probableCauses': probableCauses,
       'symptoms': symptoms,
       'recommendedAction': recommendedAction,
+      'status': status,
     };
   }
 
@@ -62,6 +66,7 @@ class DTCModel {
     List<String>? probableCauses,
     List<String>? symptoms,
     String? recommendedAction,
+    String? status,
   }) {
     return DTCModel(
       code: code ?? this.code,
@@ -72,6 +77,7 @@ class DTCModel {
       probableCauses: probableCauses ?? this.probableCauses,
       symptoms: symptoms ?? this.symptoms,
       recommendedAction: recommendedAction ?? this.recommendedAction,
+      status: status ?? this.status,
     );
   }
 }

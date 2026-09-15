@@ -184,4 +184,26 @@ abstract class AppStrings {
   String get dtcProbableCausesTitle;
   String get dtcSymptomsTitle;
   String get dtcRecommendedActionTitle;
+
+  // DTC Statuses & Filter
+  String get dtcStatusConfirmed;
+  String get dtcStatusPending;
+  String get dtcStatusPermanent;
+  String get dtcFilterAll;
+  String get dtcFilterConfirmed;
+  String get dtcFilterPending;
+  String get dtcFilterPermanent;
+
+  // Expanded Sensors
+  String get stftSensor;
+  String get ltftSensor;
+  String get timingAdvanceSensor;
+  String get fuelLevelSensor;
+  String get baroPressureSensor;
+
+  // Sensor Categories
+  String get allSensorsTab;
+  String get engineTab;
+  String get intakeTab;
+  String get fuelElectricTab;
 }

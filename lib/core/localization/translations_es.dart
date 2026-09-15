@@ -188,4 +188,26 @@ class SpanishStrings implements AppStrings {
   @override String get dtcProbableCausesTitle => 'Causas Más Probables';
   @override String get dtcSymptomsTitle => 'Síntomas Comunes';
   @override String get dtcRecommendedActionTitle => 'Acción Sugerida de Reparación';
+
+  // DTC Statuses & Filter
+  @override String get dtcStatusConfirmed => 'CONFIRMADO (MIL)';
+  @override String get dtcStatusPending => 'PENDIENTE';
+  @override String get dtcStatusPermanent => 'PERMANENTE';
+  @override String get dtcFilterAll => 'TODOS';
+  @override String get dtcFilterConfirmed => 'CONFIRMADOS';
+  @override String get dtcFilterPending => 'PENDIENTES';
+  @override String get dtcFilterPermanent => 'PERMANENTES';
+
+  // Expanded Sensors
+  @override String get stftSensor => 'Ajuste Combustible Corto (STFT)';
+  @override String get ltftSensor => 'Ajuste Combustible Largo (LTFT)';
+  @override String get timingAdvanceSensor => 'Avance de Encendido (Timing)';
+  @override String get fuelLevelSensor => 'Nivel de Combustible';
+  @override String get baroPressureSensor => 'Presión Barométrica';
+
+  // Sensor Categories
+  @override String get allSensorsTab => 'Todos';
+  @override String get engineTab => 'Motor & Rendimiento';
+  @override String get intakeTab => 'Admisión & Temperatura';
+  @override String get fuelElectricTab => 'Combustible & Batería';
 }

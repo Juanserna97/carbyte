@@ -64,6 +64,31 @@ final turboBoostStreamProvider = StreamProvider<double>((ref) {
   return service.turboBoostStream;
 });
 
+final stftStreamProvider = StreamProvider<double>((ref) {
+  final service = ref.watch(obdServiceProvider);
+  return service.stftStream;
+});
+
+final ltftStreamProvider = StreamProvider<double>((ref) {
+  final service = ref.watch(obdServiceProvider);
+  return service.ltftStream;
+});
+
+final timingAdvanceStreamProvider = StreamProvider<double>((ref) {
+  final service = ref.watch(obdServiceProvider);
+  return service.timingAdvanceStream;
+});
+
+final fuelLevelStreamProvider = StreamProvider<double>((ref) {
+  final service = ref.watch(obdServiceProvider);
+  return service.fuelLevelStream;
+});
+
+final baroStreamProvider = StreamProvider<double>((ref) {
+  final service = ref.watch(obdServiceProvider);
+  return service.baroStream;
+});
+
 // Diagnostic scan state
 class ScanState {
   static const List<String> defaultModules = [

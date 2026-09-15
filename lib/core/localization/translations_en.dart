@@ -188,4 +188,26 @@ class EnglishStrings implements AppStrings {
   @override String get dtcProbableCausesTitle => 'Probable Causes';
   @override String get dtcSymptomsTitle => 'Common Symptoms';
   @override String get dtcRecommendedActionTitle => 'Suggested Repair Action';
+
+  // DTC Statuses & Filter
+  @override String get dtcStatusConfirmed => 'CONFIRMED (MIL)';
+  @override String get dtcStatusPending => 'PENDING';
+  @override String get dtcStatusPermanent => 'PERMANENT';
+  @override String get dtcFilterAll => 'ALL';
+  @override String get dtcFilterConfirmed => 'CONFIRMED';
+  @override String get dtcFilterPending => 'PENDING';
+  @override String get dtcFilterPermanent => 'PERMANENT';
+
+  // Expanded Sensors
+  @override String get stftSensor => 'Short Term Fuel Trim (STFT)';
+  @override String get ltftSensor => 'Long Term Fuel Trim (LTFT)';
+  @override String get timingAdvanceSensor => 'Timing Advance';
+  @override String get fuelLevelSensor => 'Fuel Level';
+  @override String get baroPressureSensor => 'Barometric Pressure';
+
+  // Sensor Categories
+  @override String get allSensorsTab => 'All';
+  @override String get engineTab => 'Engine & Performance';
+  @override String get intakeTab => 'Intake & Temperature';
+  @override String get fuelElectricTab => 'Fuel & Battery';
 }
