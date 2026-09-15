@@ -5,6 +5,7 @@ import 'package:google_fonts/google_fonts.dart';
 import '../../core/theme/app_theme.dart';
 import '../../core/providers/obd_providers.dart';
 import '../../core/providers/vehicle_providers.dart';
+import '../../core/providers/emissions_providers.dart';
 import '../../core/localization/locale_provider.dart';
 
 class HomeScreen extends ConsumerWidget {
@@ -28,6 +29,27 @@ class HomeScreen extends ConsumerWidget {
     final currentSpeed = isConnected ? (speedAsync.value ?? 0) : 0;
     final coolantTemp = isConnected ? (coolantAsync.value ?? 0) : 0;
     final batteryVolt = isConnected ? (batteryAsync.value ?? 0.0) : 0.0;
+
+    final scanState = ref.watch(diagnosticScanProvider);
+    final smogState = ref.watch(emissionsMonitorsProvider);
+
+    int healthScore = 100;
+    if (scanState.foundDTCs.isNotEmpty) {
+      for (final dtc in scanState.foundDTCs) {
+        if (dtc.status == 'confirmed') {
+          healthScore -= 18;
+        } else if (dtc.status == 'permanent') {
+          healthScore -= 12;
+        } else {
+          healthScore -= 8;
+        }
+      }
+    }
+    final notReadyMonitors = smogState.totalCount - smogState.readyCount;
+    if (notReadyMonitors > 1) {
+      healthScore -= (notReadyMonitors * 5);
+    }
+    healthScore = healthScore.clamp(25, 100);
 
     return Scaffold(
       backgroundColor: AppTheme.background,
@@ -184,11 +206,15 @@ class HomeScreen extends ConsumerWidget {
                           child: Column(
                             children: [
                               Text(
-                                isConnected ? '88%' : '--',
+                                isConnected ? '$healthScore%' : '--',
                                 style: GoogleFonts.outfit(
                                   fontSize: 18,
                                   fontWeight: FontWeight.w900,
-                                  color: isConnected ? AppTheme.secondary : AppTheme.muted,
+                                  color: isConnected
+                                      ? (healthScore >= 90
+                                          ? AppTheme.success
+                                          : (healthScore >= 70 ? AppTheme.warning : AppTheme.error))
+                                      : AppTheme.muted,
                                 ),
                               ),
                               Text(

@@ -185,6 +185,26 @@ class RealOBDService implements OBDService {
   }
 
   String detectedProtocol = '';
+  final Set<String> _supportedPids = {};
+
+  void _parseSupportedPids(String cleanHex, int offset) {
+    // Look for 4100 or 4120
+    final prefix = offset == 0 ? '4100' : '4120';
+    final idx = cleanHex.indexOf(prefix);
+    if (idx != -1 && cleanHex.length >= idx + 12) {
+      final hex32 = cleanHex.substring(idx + 4, idx + 12);
+      final val = int.tryParse(hex32, radix: 16);
+      if (val != null) {
+        for (int bit = 1; bit <= 32; bit++) {
+          if ((val & (1 << (32 - bit))) != 0) {
+            final pidNum = offset + bit;
+            final pidHex = pidNum.toRadixString(16).toUpperCase().padLeft(2, '0');
+            _supportedPids.add('01$pidHex');
+          }
+        }
+      }
+    }
+  }
 
   @override
   Future<void> connect() async {
@@ -203,32 +223,33 @@ class RealOBDService implements OBDService {
     // Initial sequence
     await Future.delayed(const Duration(milliseconds: 200));
     await sendCommand('ATZ', timeout: const Duration(milliseconds: 1500)); // Reset
-    await Future.delayed(const Duration(milliseconds: 500));
-    await sendCommand('ATE0', timeout: const Duration(milliseconds: 800)); // Echo off
-    await sendCommand('ATL0', timeout: const Duration(milliseconds: 800)); // Linefeeds off
-    await sendCommand('ATS0', timeout: const Duration(milliseconds: 800)); // Spaces off
-    await sendCommand('ATH0', timeout: const Duration(milliseconds: 800)); // Headers off
-    await sendCommand('ATAT1', timeout: const Duration(milliseconds: 800)); // Adaptive timing
-    await sendCommand('ATAL', timeout: const Duration(milliseconds: 800)); // Allow long messages
+    await Future.delayed(const Duration(milliseconds: 400));
+    await sendCommand('ATE0', timeout: const Duration(milliseconds: 600)); // Echo off
+    await sendCommand('ATL0', timeout: const Duration(milliseconds: 600)); // Linefeeds off
+    await sendCommand('ATS0', timeout: const Duration(milliseconds: 600)); // Spaces off
+    await sendCommand('ATH0', timeout: const Duration(milliseconds: 600)); // Headers off
+    await sendCommand('ATAT2', timeout: const Duration(milliseconds: 600)); // Aggressive adaptive timing 2
+    await sendCommand('ATST19', timeout: const Duration(milliseconds: 600)); // Fast timeout (100ms)
+    await sendCommand('ATAL', timeout: const Duration(milliseconds: 600)); // Allow long messages
 
     // Multi-protocol ECU handshake
     bool busConnected = false;
+    String res = '';
 
-    // 1. Try Automatic protocol search (give up to 9 seconds)
-    await sendCommand('ATSP0', timeout: const Duration(milliseconds: 1000));
+    // 1. Try Automatic protocol search (give up to 8 seconds)
+    await sendCommand('ATSP0', timeout: const Duration(milliseconds: 800));
     debugPrint('[OBD] Searching protocol with 0100 (auto)...');
-    String res = await sendCommand('0100', timeout: const Duration(seconds: 9));
+    res = await sendCommand('0100', timeout: const Duration(seconds: 8));
     debugPrint('[OBD] ATSP0 result: $res');
 
-    final cleanRes = res.replaceAll(' ', '').toUpperCase();
-    if (cleanRes.contains('4100')) {
+    if (res.replaceAll(' ', '').toUpperCase().contains('4100')) {
       busConnected = true;
     }
 
     // 2. If Auto failed or timed out, try Protocol 6 (ISO 15765-4 CAN 11/500 - 90% of cars)
     if (!busConnected) {
       debugPrint('[OBD] Auto failed. Trying Protocol 6 (CAN 11/500)...');
-      await sendCommand('ATSP6', timeout: const Duration(milliseconds: 1000));
+      await sendCommand('ATSP6', timeout: const Duration(milliseconds: 800));
       res = await sendCommand('0100', timeout: const Duration(seconds: 4));
       debugPrint('[OBD] ATSP6 result: $res');
       if (res.replaceAll(' ', '').toUpperCase().contains('4100')) {
@@ -239,7 +260,7 @@ class RealOBDService implements OBDService {
     // 3. If still not connected, try Protocol 7 (ISO 15765-4 CAN 29/500)
     if (!busConnected) {
       debugPrint('[OBD] Trying Protocol 7 (CAN 29/500)...');
-      await sendCommand('ATSP7', timeout: const Duration(milliseconds: 1000));
+      await sendCommand('ATSP7', timeout: const Duration(milliseconds: 800));
       res = await sendCommand('0100', timeout: const Duration(seconds: 4));
       debugPrint('[OBD] ATSP7 result: $res');
       if (res.replaceAll(' ', '').toUpperCase().contains('4100')) {
@@ -250,7 +271,7 @@ class RealOBDService implements OBDService {
     // 4. If still not connected, try Protocol 8 (CAN 11/250)
     if (!busConnected) {
       debugPrint('[OBD] Trying Protocol 8 (CAN 11/250)...');
-      await sendCommand('ATSP8', timeout: const Duration(milliseconds: 1000));
+      await sendCommand('ATSP8', timeout: const Duration(milliseconds: 800));
       res = await sendCommand('0100', timeout: const Duration(seconds: 4));
       debugPrint('[OBD] ATSP8 result: $res');
       if (res.replaceAll(' ', '').toUpperCase().contains('4100')) {
@@ -258,15 +279,19 @@ class RealOBDService implements OBDService {
       }
     }
 
-    // 5. If still not connected, fallback to ATSP0
-    if (!busConnected) {
-      debugPrint('[OBD] Fallback to ATSP0...');
-      await sendCommand('ATSP0', timeout: const Duration(milliseconds: 1000));
-      await sendCommand('0100', timeout: const Duration(seconds: 5));
+    // Parse supported PIDs from 0100 response to avoid querying unsupported sensors
+    final clean0100 = res.replaceAll(' ', '').toUpperCase();
+    _parseSupportedPids(clean0100, 0);
+
+    // If 0120 is supported, query PID 21-40
+    if (_supportedPids.contains('0120')) {
+      final res20 = await sendCommand('0120', timeout: const Duration(milliseconds: 800));
+      _parseSupportedPids(res20.replaceAll(' ', '').toUpperCase(), 32);
     }
+    debugPrint('[OBD] Supported ECU PIDs: ${_supportedPids.length} detected');
 
     // Read active protocol description
-    final proto = await sendCommand('ATDP', timeout: const Duration(milliseconds: 1000));
+    final proto = await sendCommand('ATDP', timeout: const Duration(milliseconds: 800));
     detectedProtocol = proto.replaceAll('>', '').replaceAll('\r', '').replaceAll('\n', '').trim();
     debugPrint('[OBD] Active ECU Protocol: $detectedProtocol');
 
@@ -285,7 +310,6 @@ class RealOBDService implements OBDService {
     '010E', // Timing Advance
     '012F', // Fuel Level
     '0133', // Barometric Pressure
-    'ATRV', // Battery Voltage
   ];
 
   int _secondaryIndex = 0;
@@ -299,19 +323,34 @@ class RealOBDService implements OBDService {
     int cycle = 0;
     while (_isConnected && _isPollingActive) {
       try {
-        String cmd;
-        if (cycle % 2 == 0) {
-          cmd = '010C'; // RPM (high priority)
-        } else if (cycle % 4 == 1) {
-          cmd = '010D'; // Speed (medium priority)
-        } else {
-          // Query next secondary sensor
-          cmd = _secondaryPIDs[_secondaryIndex];
-          _secondaryIndex = (_secondaryIndex + 1) % _secondaryPIDs.length;
-        }
-        cycle = (cycle + 1) % 12;
+        // Filter secondary list to only supported PIDs to completely avoid stalls
+        final supportedSecondary = _secondaryPIDs.where((p) {
+          return _supportedPids.isEmpty || _supportedPids.contains(p);
+        }).toList();
 
-        final raw = await sendCommand(cmd, timeout: const Duration(milliseconds: 900));
+        String cmd;
+        // Priority cycle:
+        // Cycle 0, 2: RPM (High frequency, 50% of all requests)
+        // Cycle 1: Speed
+        // Cycle 3: Next supported secondary sensor (Coolant, Load, Throttle, etc.)
+        if (cycle % 2 == 0) {
+          cmd = '010C'; // RPM
+        } else if (cycle % 4 == 1) {
+          cmd = '010D'; // Speed
+        } else {
+          // Secondary sensor or occasional battery check (every 50 cycles)
+          if (cycle % 50 == 3) {
+            cmd = 'ATRV'; // Battery check every ~5 seconds
+          } else if (supportedSecondary.isNotEmpty) {
+            cmd = supportedSecondary[_secondaryIndex % supportedSecondary.length];
+            _secondaryIndex++;
+          } else {
+            cmd = '010C';
+          }
+        }
+        cycle = (cycle + 1) % 1000;
+
+        final raw = await sendCommand(cmd, timeout: const Duration(milliseconds: 500));
         if (!_isConnected || !_isPollingActive) break;
 
         if (raw.isNotEmpty) {
@@ -324,10 +363,10 @@ class RealOBDService implements OBDService {
           }
         }
 
-        // Brief delay between commands to keep the CAN bus responsive
-        await Future.delayed(const Duration(milliseconds: 35));
+        // Minimal delay between commands for ultra-responsive 15-20 Hz updates
+        await Future.delayed(const Duration(milliseconds: 10));
       } catch (e) {
-        await Future.delayed(const Duration(milliseconds: 100));
+        await Future.delayed(const Duration(milliseconds: 60));
       }
     }
   }
