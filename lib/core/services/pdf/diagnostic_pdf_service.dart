@@ -381,11 +381,19 @@ class DiagnosticPdfService {
             ),
             ...dtc.probableCauses.map(
               (cause) => pw.Padding(
-                padding: const pw.EdgeInsets.only(left: 8, top: 2),
+                padding: const pw.EdgeInsets.only(left: 4, top: 3),
                 child: pw.Row(
                   crossAxisAlignment: pw.CrossAxisAlignment.start,
                   children: [
-                    pw.Text('• ', style: const pw.TextStyle(fontSize: 9, color: PdfColors.grey700)),
+                    pw.Container(
+                      width: 4,
+                      height: 4,
+                      margin: const pw.EdgeInsets.only(top: 3.5, right: 6),
+                      decoration: const pw.BoxDecoration(
+                        color: PdfColors.blueGrey700,
+                        shape: pw.BoxShape.circle,
+                      ),
+                    ),
                     pw.Expanded(
                       child: pw.Text(cause, style: const pw.TextStyle(fontSize: 8.5, color: PdfColors.grey800)),
                     ),
@@ -447,7 +455,7 @@ class DiagnosticPdfService {
                       style: const pw.TextStyle(fontSize: 9, color: PdfColors.grey800),
                     ),
                     pw.Container(
-                      padding: const pw.EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                      padding: const pw.EdgeInsets.symmetric(horizontal: 7, vertical: 3),
                       decoration: pw.BoxDecoration(
                         color: isReady ? PdfColor.fromHex('#E8F5E9') : PdfColor.fromHex('#FFF3E0'),
                         borderRadius: pw.BorderRadius.circular(4),
@@ -456,13 +464,27 @@ class DiagnosticPdfService {
                           width: 0.5,
                         ),
                       ),
-                      child: pw.Text(
-                        isReady ? 'COMPLETADO / LISTO' : 'NO LISTO / INCOMPLETO',
-                        style: pw.TextStyle(
-                          fontSize: 7.5,
-                          fontWeight: pw.FontWeight.bold,
-                          color: isReady ? PdfColors.green900 : PdfColors.orange900,
-                        ),
+                      child: pw.Row(
+                        mainAxisSize: pw.MainAxisSize.min,
+                        children: [
+                          pw.Container(
+                            width: 4,
+                            height: 4,
+                            decoration: pw.BoxDecoration(
+                              color: isReady ? PdfColors.green800 : PdfColors.orange800,
+                              shape: pw.BoxShape.circle,
+                            ),
+                          ),
+                          pw.SizedBox(width: 4),
+                          pw.Text(
+                            isReady ? 'COMPLETADO / LISTO' : 'NO LISTO / INCOMPLETO',
+                            style: pw.TextStyle(
+                              fontSize: 7.5,
+                              fontWeight: pw.FontWeight.bold,
+                              color: isReady ? PdfColors.green900 : PdfColors.orange900,
+                            ),
+                          ),
+                        ],
                       ),
                     ),
                   ],
@@ -524,7 +546,7 @@ class DiagnosticPdfService {
         mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
         children: [
           pw.Text(
-            'CARBYTE Telematics • Documento confidencial para uso exclusivo del propietario y mecánico.',
+            'CARBYTE Telematics  |  Documento confidencial para uso exclusivo del propietario y mecánico.',
             style: const pw.TextStyle(fontSize: 7, color: PdfColors.grey600),
           ),
           pw.Text(
