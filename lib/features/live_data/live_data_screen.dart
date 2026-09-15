@@ -77,11 +77,12 @@ class _LiveDataScreenState extends ConsumerState<LiveDataScreen> {
                 ),
                 const SizedBox(width: 6),
                 Text(
-                  '10 Hz OBD',
+                  s.liveStreamBadge,
                   style: GoogleFonts.outfit(
                     color: AppTheme.success,
                     fontSize: 11,
                     fontWeight: FontWeight.w800,
+                    letterSpacing: 0.8,
                   ),
                 ),
               ],

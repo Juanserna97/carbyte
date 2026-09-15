@@ -143,7 +143,9 @@ class HomeScreen extends ConsumerWidget {
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
                               Text(
-                                isConnected ? vehicleState.vehicleName : s.vehicleDisconnectedTitle,
+                                isConnected 
+                                  ? (vehicleState.vehicleName.isNotEmpty ? vehicleState.vehicleName : s.vehicleDisconnectedTitle) 
+                                  : s.vehicleDisconnectedTitle,
                                 style: GoogleFonts.outfit(
                                   fontSize: 22,
                                   fontWeight: FontWeight.w800,
@@ -188,7 +190,7 @@ class HomeScreen extends ConsumerWidget {
                                 ),
                               ),
                               Text(
-                                'HEALTH',
+                                s.healthBadge,
                                 style: GoogleFonts.outfit(
                                   fontSize: 9,
                                   fontWeight: FontWeight.w700,

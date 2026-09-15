@@ -53,14 +53,15 @@ class EnglishStrings implements AppStrings {
   @override String get searchingObdSnack => 'Scanning for nearby OBD devices...';
   @override String get connectedSuccessSnack => 'Successfully connected';
   @override String get availableDevices => 'AVAILABLE DEVICES';
-  @override String get detectedProtocols => 'DETECTED PROTOCOL CAPABILITIES';
-  @override String get mode03Read => 'DTC Reading (Mode 03)';
-  @override String get mode04Clear => 'DTC Clearing (Mode 04)';
-  @override String get mode01Telemetry => 'PID Telemetry (Mode 01)';
-  @override String get mode09Vin => 'VIN Reading (Mode 09)';
-  @override String get mode02FreezeFrame => 'Freeze Frame (Mode 02)';
-  @override String get ecuCoding => 'ECU Coding';
-  @override String get workshopAdaptations => 'Workshop Adaptations';
+  @override String get detectedProtocols => 'SCANNER CAPABILITIES';
+  @override String get detectedProtocolsSubtitle => 'Diagnostic features supported by this adapter';
+  @override String get mode03Read => 'Read Engine Faults';
+  @override String get mode04Clear => 'Clear Check Engine';
+  @override String get mode01Telemetry => 'Live Engine Sensors';
+  @override String get mode09Vin => 'Detect VIN / Vehicle';
+  @override String get mode02FreezeFrame => 'Fault Snapshot (Freeze Frame)';
+  @override String get ecuCoding => 'ECU Tuning / Coding';
+  @override String get workshopAdaptations => 'Pro Workshop Resets';
 
   // Diagnostics Screen
   @override String get diagnosticsTitle => 'OBD-II DIAGNOSTICS';
@@ -113,4 +114,66 @@ class EnglishStrings implements AppStrings {
   @override String get aboutCarbyte => 'About CARBYTE';
   @override String get termsPrivacy => 'Terms & Privacy';
   @override String get selectLanguageTitle => 'Select Language';
+
+  // Onboarding
+  @override String get onboardingTitle1 => 'Locate the OBD2 Port';
+  @override String get onboardingDesc1 => 'A 16-pin trapezoidal diagnostic socket that connects directly to the vehicle\'s ECU.';
+  @override String get onboardingTip1 => 'Common spot: Under the steering column, near hood release or fuse panel.';
+  @override String get onboardingTitle2 => 'Plug in the Scanner';
+  @override String get onboardingDesc2 => 'Press the adapter firmly into the port. A power LED will illuminate.';
+  @override String get onboardingTip2 => 'If no LED turns on, ensure the plug is seated all the way into the socket.';
+  @override String get onboardingTitle3 => 'Turn Ignition ON';
+  @override String get onboardingDesc3 => 'Switch key to ON position or press START without depressing the brake pedal.';
+  @override String get onboardingTip3 => 'Dashboard gauge lights must be active so the ECU can communicate.';
+  @override String get onboardingTitle4 => 'Pair via Bluetooth';
+  @override String get onboardingDesc4 => 'CARBYTE scans and connects automatically to begin live telemetry and diagnostics.';
+  @override String get onboardingTip4 => 'Ensure your phone\'s Bluetooth is enabled.';
+  @override String get getStartedBtn => 'GET STARTED';
+  @override String get skipBtn => 'SKIP';
+  @override String get nextBtn => 'CONTINUE';
+  @override String get connectScannerNow => 'CONNECT SCANNER NOW';
+  @override String get exploreAppFirst => 'Explore app first';
+  @override String get stepText => 'STEP';
+
+  // Additional Localized Badges and Strings
+  @override String get healthBadge => 'HEALTH';
+  @override String get liveStreamBadge => 'LIVE STREAM';
+  @override String get recommendedBadge => 'RECOMMENDED';
+  @override String get connectedToDeviceSnack => 'Successfully connected to';
+  @override String get connectionErrorSnack => 'Failed to connect to';
+  @override String get noDeviceFoundSnack => 'No nearby Bluetooth OBD scanner detected. Ensure it is plugged in with ignition ON.';
+  @override String get unknownDevice => 'Unknown Device';
+  @override String get termsPrivacySubtitle => 'Safety, privacy & legal disclaimer';
+  @override String get aboutSubtitle => 'Version 1.0.0 (Phase 2)';
+  @override String get onboardingBadge1 => 'OBD-II PORT 16-PIN';
+  @override String get onboardingBadge2 => 'HARDWARE LINK';
+  @override String get onboardingBadge3 => 'IGNITION / ECU ON';
+  @override String get onboardingBadge4 => 'BLE TELEMETRY';
+  @override String get onboardingDlc => 'DATA LINK CONNECTOR (DLC)';
+  @override String get onboardingPwrLed => 'POWER LED ACTIVE (12V)';
+  @override String get onboardingIgnitionOn => 'IGNITION ON / 12V BUS';
+  @override String get onboardingReadyToPair => 'READY TO PAIR';
+  @override String get termsTitle => 'Terms & Privacy';
+  @override String get termsSection1Title => 'Safe Driving & Distractions';
+  @override String get termsSection1Desc => 'Never interact with CARBYTE while driving. Configure your scanner and telemetry before starting your trip or while parked safely in an authorized area.';
+  @override String get termsSection2Title => 'OBD-II Port & Hardware Compatibility';
+  @override String get termsSection2Desc => 'CARBYTE interfaces with your ECU via standard OBD-II protocols (ISO 15765-4, SAE J1850, ISO 9141). We are not liable for vehicle battery drainage or issues caused by third-party ELM327 adapters.';
+  @override String get termsSection3Title => 'Vehicle Data Privacy';
+  @override String get termsSection3Desc => 'Your telemetry and vehicle data (VIN, speed, DTC fault codes, and engine readings) are processed 100% locally on your device. We do not sell or share your data with insurance companies or third parties.';
+  @override String get termsSection4Title => 'Diagnostics & Mechanical Repairs';
+  @override String get termsSection4Desc => 'Diagnostic trouble codes (DTC) and suggestions are provided for informational purposes only. Always consult a certified automotive technician before replacing vehicle components.';
+  @override String get understoodBtn => 'UNDERSTOOD';
+
+  // History Management
+  @override String get clearHistoryTooltip => 'Clear history';
+  @override String get clearHistoryConfirmTitle => 'Clear History?';
+  @override String get clearHistoryConfirmDesc => 'Are you sure you want to delete all diagnostic scan records? This action cannot be undone.';
+  @override String get clearHistoryBtn => 'CLEAR HISTORY';
+  @override String get emptyHistoryTitle => 'No Diagnostic History';
+  @override String get emptyHistoryDesc => 'Diagnostic scans performed on your vehicle will appear here automatically.';
+  @override String get historyStatusResolved => 'Resolved';
+  @override String get historyStatusAttention => 'Attention Required';
+  @override String get historyStatusHealthy => 'Healthy';
+  @override String get historyClearedSnack => 'Diagnostic history cleared successfully.';
+  @override String get historyRecordDeletedSnack => 'Record deleted.';
 }

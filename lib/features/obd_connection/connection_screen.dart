@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:permission_handler/permission_handler.dart';
 import '../../core/theme/app_theme.dart';
@@ -15,23 +16,23 @@ class ConnectionScreen extends ConsumerStatefulWidget {
 }
 
 class _ConnectionScreenState extends ConsumerState<ConnectionScreen> {
-  String _selectedDeviceId = 'CARBYTE-SIM-01';
+  String _selectedDeviceId = '';
   bool _isConnecting = false;
 
   final List<Map<String, dynamic>> _devices = [
-    {
-      'id': 'CARBYTE-SIM-01',
-      'name': 'CARBYTE Simulator Link',
-      'protocol': 'ISO 15765-4 (CAN 11/500)',
-      'signal': -42,
-      'recommended': true,
-      'device': null,
-    },
     {
       'id': 'VGATE-BLE-409',
       'name': 'vGate iCar Pro BLE 4.0',
       'protocol': 'Auto Detect (ELM327 v2.2)',
       'signal': -58,
+      'recommended': true,
+      'device': null,
+    },
+    {
+      'id': 'CARBYTE-SIM-01',
+      'name': 'CARBYTE Simulator Link',
+      'protocol': 'ISO 15765-4 (CAN 11/500)',
+      'signal': -42,
       'recommended': false,
       'device': null,
     },
@@ -48,11 +49,22 @@ class _ConnectionScreenState extends ConsumerState<ConnectionScreen> {
       setState(() {
         for (var r in results) {
           final id = r.device.remoteId.str;
-          // Avoid duplicates
-          if (!_devices.any((d) => d['id'] == id)) {
+          final name = r.device.platformName;
+          final nameLower = name.toLowerCase();
+          
+          bool isObd = nameLower.contains('obd') || 
+                       nameLower.contains('vgate') || 
+                       nameLower.contains('vlink') || 
+                       nameLower.contains('elm') || 
+                       nameLower.contains('konnwei') || 
+                       nameLower.contains('car') ||
+                       nameLower.contains('ble');
+                       
+          // Avoid duplicates and non-OBD devices
+          if (isObd && !_devices.any((d) => d['id'] == id)) {
             _devices.add({
               'id': id,
-              'name': r.device.platformName.isNotEmpty ? r.device.platformName : 'Unknown Device',
+              'name': name.isNotEmpty ? name : 'Unknown Device',
               'protocol': 'BLE OBD',
               'signal': r.rssi,
               'recommended': false,
@@ -79,7 +91,7 @@ class _ConnectionScreenState extends ConsumerState<ConnectionScreen> {
   @override
   Widget build(BuildContext context) {
     final connectionAsync = ref.watch(connectionStateProvider);
-    final isConnected = connectionAsync.value ?? true;
+    final isConnected = connectionAsync.value ?? false;
     final obdService = ref.watch(obdServiceProvider);
     final s = ref.watch(stringsProvider);
 
@@ -91,6 +103,10 @@ class _ConnectionScreenState extends ConsumerState<ConnectionScreen> {
           style: GoogleFonts.outfit(fontSize: 16, fontWeight: FontWeight.w800, letterSpacing: 1.2),
         ),
         actions: [
+          IconButton(
+            icon: const Icon(Icons.help_outline_rounded, color: AppTheme.muted),
+            onPressed: () => context.push('/onboarding'),
+          ),
           IconButton(
             icon: const Icon(Icons.sync_rounded, color: AppTheme.secondary),
             onPressed: () async {
@@ -182,18 +198,40 @@ class _ConnectionScreenState extends ConsumerState<ConnectionScreen> {
                       // Auto connect logic
                       Future.delayed(const Duration(seconds: 3), () async {
                         if (!mounted) return;
-                        if (!ref.read(mockModeProvider) && _devices.any((d) => d['device'] != null)) {
-                          // Find first real device
-                          final target = _devices.firstWhere((d) => d['device'] != null);
-                          await BLEService().connectToDevice(target['device']);
+                        final realDevices = _devices.where((d) => d['device'] != null).toList();
+                        
+                        if (realDevices.isNotEmpty) {
+                          final target = realDevices.first;
+                          final ok = await BLEService().connectToDevice(target['device']);
+                          if (ok) {
+                            ref.read(mockModeProvider.notifier).state = false;
+                            await Future.delayed(const Duration(milliseconds: 50));
+                            final currentObdService = ref.read(obdServiceProvider);
+                            await currentObdService.connect();
+                            if (mounted) {
+                              setState(() {
+                                _selectedDeviceId = target['id'];
+                                _isConnecting = false;
+                              });
+                              messenger.showSnackBar(
+                                SnackBar(
+                                  content: Text('${s.connectedToDeviceSnack} ${target['name']}'),
+                                  backgroundColor: AppTheme.success,
+                                ),
+                              );
+                            }
+                            return;
+                          }
                         }
-                        
-                        await obdService.connect();
-                        
+
+                        // No real device found or connection failed
                         if (!mounted) return;
                         setState(() => _isConnecting = false);
                         messenger.showSnackBar(
-                          SnackBar(content: Text(s.connectedSuccessSnack)),
+                          SnackBar(
+                            content: Text(s.noDeviceFoundSnack),
+                            backgroundColor: AppTheme.error,
+                          ),
                         );
                       });
                     },
@@ -257,7 +295,7 @@ class _ConnectionScreenState extends ConsumerState<ConnectionScreen> {
 
               ..._devices
                   .where((d) => ref.watch(mockModeProvider) ? true : d['device'] != null)
-                  .map((device) => _buildDeviceCard(device, isConnected, obdService)),
+                  .map((device) => _buildDeviceCard(device, isConnected, obdService, s)),
 
               const SizedBox(height: 20),
 
@@ -273,16 +311,31 @@ class _ConnectionScreenState extends ConsumerState<ConnectionScreen> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
+                    Row(
+                      children: [
+                        const Icon(Icons.verified_rounded, size: 16, color: AppTheme.secondary),
+                        const SizedBox(width: 8),
+                        Text(
+                          s.detectedProtocols,
+                          style: GoogleFonts.outfit(
+                            fontSize: 12,
+                            fontWeight: FontWeight.w800,
+                            letterSpacing: 1.0,
+                            color: AppTheme.secondary,
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 4),
                     Text(
-                      s.detectedProtocols,
+                      s.detectedProtocolsSubtitle,
                       style: GoogleFonts.outfit(
-                        fontSize: 11,
-                        fontWeight: FontWeight.w800,
-                        letterSpacing: 1.0,
-                        color: AppTheme.secondary,
+                        fontSize: 12,
+                        color: AppTheme.muted,
+                        height: 1.3,
                       ),
                     ),
-                    const SizedBox(height: 12),
+                    const SizedBox(height: 14),
                     Wrap(
                       spacing: 8,
                       runSpacing: 8,
@@ -307,7 +360,7 @@ class _ConnectionScreenState extends ConsumerState<ConnectionScreen> {
     );
   }
 
-  Widget _buildDeviceCard(Map<String, dynamic> device, bool isConnected, dynamic obdService) {
+  Widget _buildDeviceCard(Map<String, dynamic> device, bool isConnected, dynamic obdService, dynamic s) {
     final isSelected = _selectedDeviceId == device['id'];
 
     return Container(
@@ -331,16 +384,22 @@ class _ConnectionScreenState extends ConsumerState<ConnectionScreen> {
             });
             
             bool connectionSuccess = true;
+            bool isMock = true;
             if (device['device'] != null) {
               connectionSuccess = await BLEService().connectToDevice(device['device']);
+              isMock = false;
             }
 
             if (connectionSuccess) {
-              await obdService.connect();
+              ref.read(mockModeProvider.notifier).state = isMock;
+              await Future.delayed(const Duration(milliseconds: 50));
+              final currentObdService = ref.read(obdServiceProvider);
+              await currentObdService.connect();
+              
               if (mounted) {
                 ScaffoldMessenger.of(context).showSnackBar(
                   SnackBar(
-                    content: Text('Conectado exitosamente con ${device['name']}'),
+                    content: Text('${s.connectedToDeviceSnack} ${device['name']}'),
                     backgroundColor: AppTheme.success,
                   ),
                 );
@@ -349,7 +408,7 @@ class _ConnectionScreenState extends ConsumerState<ConnectionScreen> {
               if (mounted) {
                 ScaffoldMessenger.of(context).showSnackBar(
                   SnackBar(
-                    content: Text('Error al conectar con ${device['name']}'),
+                    content: Text('${s.connectionErrorSnack} ${device['name']}'),
                     backgroundColor: AppTheme.error,
                   ),
                 );
@@ -396,7 +455,7 @@ class _ConnectionScreenState extends ConsumerState<ConnectionScreen> {
                                 borderRadius: BorderRadius.circular(4),
                               ),
                               child: Text(
-                                'RECOMENDADO',
+                                s.recommendedBadge,
                                 style: GoogleFonts.outfit(
                                   fontSize: 9,
                                   fontWeight: FontWeight.w800,

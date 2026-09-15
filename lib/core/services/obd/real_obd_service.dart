@@ -26,25 +26,64 @@ class RealOBDService implements OBDService {
   }
 
   @override
-  Stream<bool> get connectionState => _connectionController.stream;
+  Stream<bool> get connectionState async* {
+    yield _isConnected;
+    yield* _connectionController.stream;
+  }
+
   @override
-  Stream<double> get rpmStream => _rpmController.stream;
+  Stream<double> get rpmStream async* {
+    yield 0.0;
+    yield* _rpmController.stream;
+  }
+
   @override
-  Stream<double> get speedStream => _speedController.stream;
+  Stream<double> get speedStream async* {
+    yield 0.0;
+    yield* _speedController.stream;
+  }
+
   @override
-  Stream<double> get coolantTempStream => _coolantController.stream;
+  Stream<double> get coolantTempStream async* {
+    yield 0.0;
+    yield* _coolantController.stream;
+  }
+
   @override
-  Stream<double> get engineLoadStream => _loadController.stream;
+  Stream<double> get engineLoadStream async* {
+    yield 0.0;
+    yield* _loadController.stream;
+  }
+
   @override
-  Stream<double> get throttleStream => _throttleController.stream;
+  Stream<double> get throttleStream async* {
+    yield 0.0;
+    yield* _throttleController.stream;
+  }
+
   @override
-  Stream<double> get batteryVoltageStream => _batteryController.stream;
+  Stream<double> get batteryVoltageStream async* {
+    yield 0.0;
+    yield* _batteryController.stream;
+  }
+
   @override
-  Stream<double> get intakeTempStream => _intakeTempController.stream;
+  Stream<double> get intakeTempStream async* {
+    yield 0.0;
+    yield* _intakeTempController.stream;
+  }
+
   @override
-  Stream<double> get mafStream => _mafController.stream;
+  Stream<double> get mafStream async* {
+    yield 0.0;
+    yield* _mafController.stream;
+  }
+
   @override
-  Stream<double> get turboBoostStream => _turboBoostController.stream;
+  Stream<double> get turboBoostStream async* {
+    yield 0.0;
+    yield* _turboBoostController.stream;
+  }
 
   @override
   Future<void> connect() async {

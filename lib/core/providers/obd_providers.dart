@@ -5,7 +5,7 @@ import '../services/obd/obd_service.dart';
 import '../../shared/models/dtc_model.dart';
 
 // Toggles between mock data (simulator) and real BLE data
-final mockModeProvider = StateProvider<bool>((ref) => true);
+final mockModeProvider = StateProvider<bool>((ref) => false);
 
 final obdServiceProvider = Provider<OBDService>((ref) {
   final isMock = ref.watch(mockModeProvider);

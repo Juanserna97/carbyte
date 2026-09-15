@@ -53,14 +53,15 @@ class SpanishStrings implements AppStrings {
   @override String get searchingObdSnack => 'Buscando dispositivos OBD...';
   @override String get connectedSuccessSnack => 'Conectado exitosamente';
   @override String get availableDevices => 'DISPOSITIVOS DISPONIBLES';
-  @override String get detectedProtocols => 'CAPACIDADES DEL PROTOCOLO DETECTADO';
-  @override String get mode03Read => 'Lectura DTC (Mode 03)';
-  @override String get mode04Clear => 'Borrado DTC (Mode 04)';
-  @override String get mode01Telemetry => 'Telemetría PIDs (Mode 01)';
-  @override String get mode09Vin => 'Lectura VIN (Mode 09)';
-  @override String get mode02FreezeFrame => 'Freeze Frame (Mode 02)';
-  @override String get ecuCoding => 'ECU Coding';
-  @override String get workshopAdaptations => 'Adaptaciones de Taller';
+  @override String get detectedProtocols => 'FUNCIONES DEL ESCÁNER';
+  @override String get detectedProtocolsSubtitle => 'Capacidades de diagnóstico disponibles con este adaptador';
+  @override String get mode03Read => 'Leer Fallas de Motor';
+  @override String get mode04Clear => 'Borrar Check Engine';
+  @override String get mode01Telemetry => 'Sensores en Tiempo Real';
+  @override String get mode09Vin => 'Detectar VIN / Auto';
+  @override String get mode02FreezeFrame => 'Foto de Falla (Freeze Frame)';
+  @override String get ecuCoding => 'Reprogramación ECU';
+  @override String get workshopAdaptations => 'Ajustes de Taller Pro';
 
   // Diagnostics Screen
   @override String get diagnosticsTitle => 'DIAGNÓSTICO OBD-II';
@@ -113,4 +114,66 @@ class SpanishStrings implements AppStrings {
   @override String get aboutCarbyte => 'Acerca de CARBYTE';
   @override String get termsPrivacy => 'Términos y Privacidad';
   @override String get selectLanguageTitle => 'Seleccionar Idioma';
+
+  // Onboarding
+  @override String get onboardingTitle1 => 'Ubica el Puerto OBD2';
+  @override String get onboardingDesc1 => 'Es un conector trapezoidal de 16 pines que comunica con la computadora central (ECU) del auto.';
+  @override String get onboardingTip1 => 'Ubicación común: Debajo del volante, cerca a la palanca del capó o fusiblera.';
+  @override String get onboardingTitle2 => 'Enchufa el Escáner';
+  @override String get onboardingDesc2 => 'Presiona el adaptador firmemente hasta el fondo. Observarás que se enciende su luz LED.';
+  @override String get onboardingTip2 => 'Si el LED no enciende, asegúrate de empujarlo con firmeza en el zócalo.';
+  @override String get onboardingTitle3 => 'Pon el Auto en Contacto (ON)';
+  @override String get onboardingDesc3 => 'Gira la llave a posición ON o presiona el botón START sin tocar el pedal de freno.';
+  @override String get onboardingTip3 => 'Importante: Las luces del tablero deben prenderse para alimentar la computadora.';
+  @override String get onboardingTitle4 => 'Empareja por Bluetooth';
+  @override String get onboardingDesc4 => 'CARBYTE detectará tu escáner automáticamente para transmitir telemetría y diagnósticos en tiempo real.';
+  @override String get onboardingTip4 => 'Asegúrate de que el Bluetooth de tu teléfono esté activo.';
+  @override String get getStartedBtn => 'COMENZAR AHORA';
+  @override String get skipBtn => 'OMITIR';
+  @override String get nextBtn => 'CONTINUAR';
+  @override String get connectScannerNow => 'CONECTAR ESCÁNER AHORA';
+  @override String get exploreAppFirst => 'Explorar la app primero';
+  @override String get stepText => 'PASO';
+
+  // Additional Localized Badges and Strings
+  @override String get healthBadge => 'SALUD';
+  @override String get liveStreamBadge => 'EN VIVO';
+  @override String get recommendedBadge => 'RECOMENDADO';
+  @override String get connectedToDeviceSnack => 'Conectado exitosamente con';
+  @override String get connectionErrorSnack => 'Error al conectar con';
+  @override String get noDeviceFoundSnack => 'No se detectó ningún escáner OBD Bluetooth cercano. Verifica que esté conectado y en ON.';
+  @override String get unknownDevice => 'Dispositivo Desconocido';
+  @override String get termsPrivacySubtitle => 'Seguridad, privacidad y descargo legal';
+  @override String get aboutSubtitle => 'Versión 1.0.0 (Fase 2)';
+  @override String get onboardingBadge1 => 'PUERTO OBD-II 16-PIN';
+  @override String get onboardingBadge2 => 'ENLACE DE HARDWARE';
+  @override String get onboardingBadge3 => 'CONTACTO / ECU EN ON';
+  @override String get onboardingBadge4 => 'TELEMETRÍA BLE';
+  @override String get onboardingDlc => 'CONECTOR DE DIAGNÓSTICO (DLC)';
+  @override String get onboardingPwrLed => 'LED DE ALIMENTACIÓN (12V)';
+  @override String get onboardingIgnitionOn => 'CONTACTO EN ON / BUS 12V';
+  @override String get onboardingReadyToPair => 'LISTO PARA ENLAZAR';
+  @override String get termsTitle => 'Términos y Privacidad';
+  @override String get termsSection1Title => 'Conducción Segura y Distracciones';
+  @override String get termsSection1Desc => 'Nunca manipules CARBYTE mientras conduces. Configura tu escáner y la telemetría antes de iniciar la marcha o con el vehículo detenido de forma segura en un lugar permitido.';
+  @override String get termsSection2Title => 'Puerto OBD-II y Compatibilidad';
+  @override String get termsSection2Desc => 'CARBYTE interactúa con la ECU mediante protocolos OBD-II estándar (ISO 15765-4, SAE J1850, ISO 9141). No nos hacemos responsables por fallos o consumos de batería ocasionados por adaptadores BLE defectuosos de terceros.';
+  @override String get termsSection3Title => 'Privacidad de Datos Vehiculares';
+  @override String get termsSection3Desc => 'Tus datos de telemetría (VIN, velocidades, códigos de falla DTC y rendimiento) se procesan 100% de manera local en tu teléfono. No vendemos ni compartimos tu información con compañías de seguros ni terceros.';
+  @override String get termsSection4Title => 'Diagnósticos y Reparaciones';
+  @override String get termsSection4Desc => 'Los códigos de falla (DTC) y sugerencias de diagnóstico son exclusivamente informativos. Siempre valida los resultados con un técnico automotriz certificado antes de reemplazar componentes mecánicos.';
+  @override String get understoodBtn => 'ENTENDIDO';
+
+  // History Management
+  @override String get clearHistoryTooltip => 'Borrar historial';
+  @override String get clearHistoryConfirmTitle => '¿Borrar Historial?';
+  @override String get clearHistoryConfirmDesc => '¿Estás seguro de que deseas eliminar todos los reportes de diagnóstico? Esta acción no se puede deshacer.';
+  @override String get clearHistoryBtn => 'BORRAR HISTORIAL';
+  @override String get emptyHistoryTitle => 'Sin Historial de Diagnósticos';
+  @override String get emptyHistoryDesc => 'Los escaneos que realices a tu vehículo se guardarán aquí automáticamente para su consulta.';
+  @override String get historyStatusResolved => 'Resuelto';
+  @override String get historyStatusAttention => 'Atención Requerida';
+  @override String get historyStatusHealthy => 'Saludable';
+  @override String get historyClearedSnack => 'Historial de diagnósticos eliminado con éxito.';
+  @override String get historyRecordDeletedSnack => 'Registro eliminado.';
 }

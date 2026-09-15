@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'package:flutter/foundation.dart';
 import 'package:flutter_blue_plus/flutter_blue_plus.dart';
 
 class BLEService {
@@ -19,7 +20,7 @@ class BLEService {
     try {
       await FlutterBluePlus.startScan(timeout: const Duration(seconds: 10));
     } catch (e) {
-      print('Error starting scan: $e');
+      debugPrint('Error starting scan: $e');
     }
   }
 
@@ -39,7 +40,7 @@ class BLEService {
       
       return true;
     } catch (e) {
-      print('Failed to connect: $e');
+      debugPrint('Failed to connect: $e');
       return false;
     }
   }

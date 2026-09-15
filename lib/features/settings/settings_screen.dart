@@ -63,7 +63,9 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Text(
-                          ref.watch(vehicleProvider).vehicleName,
+                          ref.watch(vehicleProvider).vehicleName.isNotEmpty 
+                              ? ref.watch(vehicleProvider).vehicleName 
+                              : s.vehicleDisconnectedTitle,
                           style: GoogleFonts.outfit(
                             fontSize: 16,
                             fontWeight: FontWeight.w800,
@@ -135,15 +137,19 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
             _buildSectionHeader(s.information),
             _buildNavTile(
               title: s.aboutCarbyte,
-              subtitle: 'Versión 1.0.0 (Build 2026.09)',
+              subtitle: s.aboutSubtitle,
               icon: Icons.info_outline_rounded,
-              onTap: () {},
+              onTap: () {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(content: Text('${s.aboutCarbyte} - ${s.aboutSubtitle}')),
+                );
+              },
             ),
             _buildNavTile(
               title: s.termsPrivacy,
-              subtitle: 'Seguridad y protección de datos vehiculares',
+              subtitle: s.termsPrivacySubtitle,
               icon: Icons.shield_outlined,
-              onTap: () {},
+              onTap: () => context.push('/terms_privacy'),
             ),
             const SizedBox(height: 32),
           ],

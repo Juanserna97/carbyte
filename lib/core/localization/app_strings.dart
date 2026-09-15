@@ -50,6 +50,7 @@ abstract class AppStrings {
   String get connectedSuccessSnack;
   String get availableDevices;
   String get detectedProtocols;
+  String get detectedProtocolsSubtitle;
   String get mode03Read;
   String get mode04Clear;
   String get mode01Telemetry;
@@ -109,4 +110,66 @@ abstract class AppStrings {
   String get aboutCarbyte;
   String get termsPrivacy;
   String get selectLanguageTitle;
+
+  // Onboarding
+  String get onboardingTitle1;
+  String get onboardingDesc1;
+  String get onboardingTip1;
+  String get onboardingTitle2;
+  String get onboardingDesc2;
+  String get onboardingTip2;
+  String get onboardingTitle3;
+  String get onboardingDesc3;
+  String get onboardingTip3;
+  String get onboardingTitle4;
+  String get onboardingDesc4;
+  String get onboardingTip4;
+  String get getStartedBtn;
+  String get skipBtn;
+  String get nextBtn;
+  String get connectScannerNow;
+  String get exploreAppFirst;
+  String get stepText;
+
+  // Additional Localized Badges and Strings
+  String get healthBadge;
+  String get liveStreamBadge;
+  String get recommendedBadge;
+  String get connectedToDeviceSnack;
+  String get connectionErrorSnack;
+  String get noDeviceFoundSnack;
+  String get unknownDevice;
+  String get termsPrivacySubtitle;
+  String get aboutSubtitle;
+  String get onboardingBadge1;
+  String get onboardingBadge2;
+  String get onboardingBadge3;
+  String get onboardingBadge4;
+  String get onboardingDlc;
+  String get onboardingPwrLed;
+  String get onboardingIgnitionOn;
+  String get onboardingReadyToPair;
+  String get termsTitle;
+  String get termsSection1Title;
+  String get termsSection1Desc;
+  String get termsSection2Title;
+  String get termsSection2Desc;
+  String get termsSection3Title;
+  String get termsSection3Desc;
+  String get termsSection4Title;
+  String get termsSection4Desc;
+  String get understoodBtn;
+
+  // History Management
+  String get clearHistoryTooltip;
+  String get clearHistoryConfirmTitle;
+  String get clearHistoryConfirmDesc;
+  String get clearHistoryBtn;
+  String get emptyHistoryTitle;
+  String get emptyHistoryDesc;
+  String get historyStatusResolved;
+  String get historyStatusAttention;
+  String get historyStatusHealthy;
+  String get historyClearedSnack;
+  String get historyRecordDeletedSnack;
 }
