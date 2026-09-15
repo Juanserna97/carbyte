@@ -66,9 +66,19 @@ final turboBoostStreamProvider = StreamProvider<double>((ref) {
 
 // Diagnostic scan state
 class ScanState {
+  static const List<String> defaultModules = [
+    'ENGINE (PCM / ECM)',
+    'TRANSMISSION (TCM)',
+    'ANTI-LOCK BRAKING (ABS / ESP)',
+    'AIRBAG / RESTRAINT (SRS)',
+    'BODY CONTROL MODULE (BCM)',
+    'EXHAUST & CATALYST SENSORS',
+  ];
+
   final bool isScanning;
   final double progress;
   final String currentModule;
+  final List<String> modulesList;
   final List<String> completedModules;
   final List<DTCModel> foundDTCs;
   final bool isFinished;
@@ -77,6 +87,7 @@ class ScanState {
     this.isScanning = false,
     this.progress = 0.0,
     this.currentModule = '',
+    this.modulesList = defaultModules,
     this.completedModules = const [],
     this.foundDTCs = const [],
     this.isFinished = false,
@@ -86,6 +97,7 @@ class ScanState {
     bool? isScanning,
     double? progress,
     String? currentModule,
+    List<String>? modulesList,
     List<String>? completedModules,
     List<DTCModel>? foundDTCs,
     bool? isFinished,
@@ -94,6 +106,7 @@ class ScanState {
       isScanning: isScanning ?? this.isScanning,
       progress: progress ?? this.progress,
       currentModule: currentModule ?? this.currentModule,
+      modulesList: modulesList ?? this.modulesList,
       completedModules: completedModules ?? this.completedModules,
       foundDTCs: foundDTCs ?? this.foundDTCs,
       isFinished: isFinished ?? this.isFinished,
@@ -109,14 +122,7 @@ class DiagnosticNotifier extends StateNotifier<ScanState> {
   Future<void> startScan() async {
     state = const ScanState(isScanning: true, progress: 0.0, currentModule: 'Initializing OBD-II Bus...');
     
-    final modules = [
-      'ENGINE (PCM / ECM)',
-      'TRANSMISSION (TCM)',
-      'ANTI-LOCK BRAKING (ABS / ESP)',
-      'AIRBAG / RESTRAINT (SRS)',
-      'BODY CONTROL MODULE (BCM)',
-      'EXHAUST & CATALYST SENSORS',
-    ];
+    final modules = ScanState.defaultModules;
 
     final completed = <String>[];
 

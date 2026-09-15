@@ -1,39 +1,114 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:lucide_icons/lucide_icons.dart';
 import '../../core/theme/app_theme.dart';
+import '../../core/localization/locale_provider.dart';
+import '../../core/providers/vehicle_providers.dart';
+import '../../core/providers/emissions_providers.dart';
+import '../../core/services/pdf/diagnostic_pdf_service.dart';
+import '../../shared/models/dtc_model.dart';
 
-class DtcDetailsScreen extends StatelessWidget {
-  final String code;
-  final String title;
-  final int severity;
-  final String system;
+class DtcDetailsScreen extends ConsumerWidget {
+  final DTCModel? dtc;
 
   const DtcDetailsScreen({
     super.key,
-    this.code = 'P0301',
-    this.title = 'Cylinder 1 Misfire Detected',
-    this.severity = 7,
-    this.system = 'Powertrain / Engine (PCM)',
+    this.dtc,
   });
 
+  Future<void> _shareDtcPdf(BuildContext context, WidgetRef ref) async {
+    final s = ref.read(stringsProvider);
+    final vehicle = ref.read(vehicleProvider);
+    final smogState = ref.read(emissionsMonitorsProvider);
+
+    final currentDtc = dtc ??
+        const DTCModel(
+          code: 'P0301',
+          description: 'Fallo de encendido en Cilindro 1 (Misfire)',
+          severity: 'High',
+          system: 'Powertrain / Engine (PCM)',
+          probableCauses: [
+            'Bujía desgastada, con carbón o electrodo dañado',
+            'Bobina de encendido (Coil Pack) defectuosa o en corto',
+            'Inyector de combustible tapado o sucio',
+            'Baja compresión en el cilindro 1',
+          ],
+          symptoms: [
+            'Temblores perceptibles en ralentí',
+            'Pérdida súbita de potencia al acelerar',
+            'Luz Check Engine parpadeando bajo carga',
+          ],
+          recommendedAction: 'Inspeccionar bujía del cilindro 1 e intercambiar la bobina con el cilindro 2.',
+        );
+
+    final messenger = ScaffoldMessenger.of(context);
+    messenger.showSnackBar(SnackBar(content: Text(s.generatingPdfSnack)));
+
+    try {
+      await DiagnosticPdfService.shareReport(
+        vehicleName: vehicle.vehicleName.isNotEmpty ? vehicle.vehicleName : 'Vehículo Conectado',
+        vin: vehicle.vin,
+        dtcs: [currentDtc],
+        readinessMonitors: {for (var m in smogState.monitors) m.name: m.isReady},
+      );
+    } catch (e) {
+      if (context.mounted) {
+        messenger.showSnackBar(
+          SnackBar(content: Text('Error: $e'), backgroundColor: AppTheme.error),
+        );
+      }
+    }
+  }
+
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
+    final s = ref.watch(stringsProvider);
+
+    final activeCode = dtc?.code ?? 'P0301';
+    final activeDesc = dtc?.description ?? 'Fallo de encendido en Cilindro 1 (Misfire)';
+    final activeSystem = dtc?.system ?? 'Powertrain / Engine (PCM)';
+    final activeSeverity = dtc?.severity == 'High' ? 8 : (dtc?.severity == 'Medium' ? 5 : 3);
+
+    final causes = dtc?.probableCauses.isNotEmpty == true
+        ? dtc!.probableCauses
+        : [
+            'Bujía desgastada o con carbonilla (Spark plug)',
+            'Bobina de encendido averiada o con fuga (Ignition coil)',
+            'Inyector de combustible obstruido o con baja presión',
+            'Fuga de vacío en el múltiple de admisión',
+          ];
+
+    final symptoms = dtc?.symptoms.isNotEmpty == true
+        ? dtc!.symptoms
+        : [
+            'Vibraciones y temblor perceptible en ralentí',
+            'Titubeo o jaloneo súbito al pisar el acelerador',
+            'Luz Check Engine parpadeante o fija en el tablero',
+            'Mayor consumo de gasolina por combustión incompleta',
+          ];
+
+    final recommendedAction = dtc?.recommendedAction.isNotEmpty == true
+        ? dtc!.recommendedAction
+        : 'Inspeccionar visualmente la bujía del cilindro 1. Si está quemada, reemplazar el juego completo. Probar resistencia eléctrica en la bobina de encendido.';
+
     return Scaffold(
       backgroundColor: AppTheme.background,
       appBar: AppBar(
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back_ios_new_rounded, color: AppTheme.text, size: 20),
+          onPressed: () => context.pop(),
+        ),
         title: Text(
-          'ANÁLISIS DE FALLA',
+          'ANÁLISIS DE FALLA $activeCode',
           style: GoogleFonts.outfit(fontSize: 16, fontWeight: FontWeight.w800, letterSpacing: 1.2),
         ),
         actions: [
           IconButton(
-            icon: const Icon(Icons.share_outlined, color: AppTheme.muted),
-            onPressed: () {
-              ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(content: Text('Informe exportado a PDF/Portapapeles')),
-              );
-            },
+            icon: const Icon(Icons.share_outlined, color: AppTheme.secondary),
+            tooltip: s.exportPdfTooltip,
+            onPressed: () => _shareDtcPdf(context, ref),
           ),
         ],
       ),
@@ -66,7 +141,7 @@ class DtcDetailsScreen extends StatelessWidget {
                             border: Border.all(color: AppTheme.error.withValues(alpha: 0.4)),
                           ),
                           child: Text(
-                            code,
+                            activeCode,
                             style: GoogleFonts.sourceCodePro(
                               color: AppTheme.error,
                               fontSize: 22,
@@ -87,7 +162,7 @@ class DtcDetailsScreen extends StatelessWidget {
                               const Icon(Icons.speed_rounded, size: 14, color: AppTheme.error),
                               const SizedBox(width: 6),
                               Text(
-                                'SEVERIDAD $severity/10',
+                                'SEVERIDAD $activeSeverity/10',
                                 style: GoogleFonts.outfit(
                                   color: AppTheme.error,
                                   fontSize: 12,
@@ -101,9 +176,9 @@ class DtcDetailsScreen extends StatelessWidget {
                     ),
                     const SizedBox(height: 16),
                     Text(
-                      title,
+                      activeDesc,
                       style: GoogleFonts.outfit(
-                        fontSize: 22,
+                        fontSize: 20,
                         fontWeight: FontWeight.w800,
                         color: AppTheme.text,
                         height: 1.2,
@@ -111,7 +186,7 @@ class DtcDetailsScreen extends StatelessWidget {
                     ),
                     const SizedBox(height: 6),
                     Text(
-                      system,
+                      activeSystem,
                       style: GoogleFonts.outfit(
                         fontSize: 13,
                         fontWeight: FontWeight.w600,
@@ -123,7 +198,7 @@ class DtcDetailsScreen extends StatelessWidget {
                     ClipRRect(
                       borderRadius: BorderRadius.circular(6),
                       child: LinearProgressIndicator(
-                        value: severity / 10.0,
+                        value: activeSeverity / 10.0,
                         minHeight: 6,
                         backgroundColor: AppTheme.border,
                         valueColor: const AlwaysStoppedAnimation<Color>(AppTheme.error),
@@ -135,32 +210,25 @@ class DtcDetailsScreen extends StatelessWidget {
 
               const SizedBox(height: 20),
 
-              // Section 1: WHAT IT MEANS
+              // Section 1: PROBABLE CAUSES
               _buildSectionCard(
-                icon: Icons.info_outline_rounded,
-                iconColor: AppTheme.secondary,
-                title: '¿QUÉ SIGNIFICA ESTE CÓDIGO?',
-                content: Text(
-                  'El sensor del cigüeñal y la computadora del motor (ECU) detectaron fallos repetidos en el ciclo de combustión del cilindro #1.\n\nEsto genera pérdida momentánea de potencia, aumento de emisiones, vibración perceptible al ralentí y puede sobrecalentar el convertidor catalítico si el combustible sin quemar pasa al escape.',
-                  style: GoogleFonts.outfit(fontSize: 14, color: AppTheme.text, height: 1.5),
+                icon: LucideIcons.alertCircle,
+                iconColor: AppTheme.warning,
+                title: s.dtcProbableCausesTitle,
+                content: Column(
+                  children: causes.map((cause) => _buildBulletItem(cause, AppTheme.warning)).toList(),
                 ),
               ),
 
               const SizedBox(height: 16),
 
-              // Section 2: POSSIBLE CAUSES
+              // Section 2: SYMPTOMS
               _buildSectionCard(
-                icon: Icons.build_circle_outlined,
-                iconColor: AppTheme.warning,
-                title: 'POSIBLES CAUSAS',
+                icon: LucideIcons.activity,
+                iconColor: AppTheme.secondary,
+                title: s.dtcSymptomsTitle,
                 content: Column(
-                  children: [
-                    _buildCauseItem('Bujía desgastada o con carbonilla (Spark plug)'),
-                    _buildCauseItem('Bobina de encendido averiada o con fuga (Ignition coil)'),
-                    _buildCauseItem('Inyector de combustible obstruido o con baja presión'),
-                    _buildCauseItem('Pérdida de compresión por válvulas o anillos del cilindro'),
-                    _buildCauseItem('Fuga de vacío en el múltiple de admisión'),
-                  ],
+                  children: symptoms.map((symptom) => _buildBulletItem(symptom, AppTheme.secondary)).toList(),
                 ),
               ),
 
@@ -168,98 +236,49 @@ class DtcDetailsScreen extends StatelessWidget {
 
               // Section 3: RECOMMENDED ACTION
               _buildSectionCard(
-                icon: Icons.assignment_turned_in_outlined,
-                iconColor: AppTheme.success,
-                title: 'ACCIÓN RECOMENDADA',
-                content: Text(
-                  '1. Revisar estado visual y calibración de la bujía #1.\n2. Intercambiar bobina #1 con cilindro #2 para descartar fallo de bobina si el código migra a P0302.\n3. Realizar prueba de compresión si el fallo persiste.',
-                  style: GoogleFonts.outfit(fontSize: 14, color: AppTheme.text, height: 1.5),
+                icon: LucideIcons.wrench,
+                iconColor: AppTheme.primary,
+                title: s.dtcRecommendedActionTitle,
+                content: Container(
+                  width: double.infinity,
+                  padding: const EdgeInsets.all(12),
+                  decoration: BoxDecoration(
+                    color: AppTheme.background,
+                    borderRadius: BorderRadius.circular(10),
+                    border: Border.all(color: AppTheme.border),
+                  ),
+                  child: Text(
+                    recommendedAction,
+                    style: GoogleFonts.outfit(fontSize: 13, color: AppTheme.text, height: 1.45),
+                  ),
                 ),
               ),
 
-              const SizedBox(height: 24),
+              const SizedBox(height: 28),
 
-              // Warning Note
-              Container(
-                padding: const EdgeInsets.all(14),
-                decoration: BoxDecoration(
-                  color: AppTheme.warning.withValues(alpha: 0.1),
-                  borderRadius: BorderRadius.circular(14),
-                  border: Border.all(color: AppTheme.warning.withValues(alpha: 0.3)),
-                ),
-                child: Row(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    const Icon(Icons.report_problem_outlined, color: AppTheme.warning, size: 20),
-                    const SizedBox(width: 10),
-                    Expanded(
-                      child: Text(
-                        'Aviso: Borrar el código de la ECU restablece la luz del tablero, pero si la causa física no se repara, el código reaparecerá al completar un ciclo de conducción.',
-                        style: GoogleFonts.outfit(fontSize: 12, color: AppTheme.text, height: 1.4),
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-
-              const SizedBox(height: 24),
-
-              // Action Buttons
-              Row(
-                children: [
-                  Expanded(
-                    child: OutlinedButton(
-                      style: OutlinedButton.styleFrom(
-                        side: const BorderSide(color: AppTheme.error, width: 1.2),
-                        padding: const EdgeInsets.symmetric(vertical: 16),
-                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
-                      ),
-                      onPressed: () {
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          const SnackBar(
-                            content: Text('Comando Mode 04 enviado a la ECU. Código borrado.'),
-                            backgroundColor: AppTheme.success,
-                          ),
-                        );
-                        context.pop();
-                      },
-                      child: Text(
-                        'BORRAR CÓDIGO',
-                        style: GoogleFonts.outfit(
-                          color: AppTheme.error,
-                          fontWeight: FontWeight.w800,
-                          fontSize: 13,
-                        ),
-                      ),
+              // Share PDF Button
+              SizedBox(
+                width: double.infinity,
+                height: 52,
+                child: ElevatedButton.icon(
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: AppTheme.primary,
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                  ),
+                  icon: const Icon(Icons.picture_as_pdf_rounded, color: Colors.white, size: 20),
+                  label: Text(
+                    s.exportPdfReportBtn,
+                    style: GoogleFonts.outfit(
+                      fontSize: 13,
+                      fontWeight: FontWeight.w800,
+                      letterSpacing: 0.8,
+                      color: Colors.white,
                     ),
                   ),
-                  const SizedBox(width: 12),
-                  Expanded(
-                    child: ElevatedButton(
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: AppTheme.primary,
-                        padding: const EdgeInsets.symmetric(vertical: 16),
-                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
-                      ),
-                      onPressed: () {
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          const SnackBar(
-                            content: Text('Diagnóstico guardado en el Historial del vehículo.'),
-                            backgroundColor: AppTheme.primary,
-                          ),
-                        );
-                      },
-                      child: Text(
-                        'GUARDAR',
-                        style: GoogleFonts.outfit(
-                          fontWeight: FontWeight.w800,
-                          fontSize: 13,
-                        ),
-                      ),
-                    ),
-                  ),
-                ],
+                  onPressed: () => _shareDtcPdf(context, ref),
+                ),
               ),
+
               const SizedBox(height: 24),
             ],
           ),
@@ -279,7 +298,7 @@ class DtcDetailsScreen extends StatelessWidget {
       padding: const EdgeInsets.all(18),
       decoration: BoxDecoration(
         color: AppTheme.surface,
-        borderRadius: BorderRadius.circular(18),
+        borderRadius: BorderRadius.circular(16),
         border: Border.all(color: AppTheme.border),
       ),
       child: Column(
@@ -288,45 +307,44 @@ class DtcDetailsScreen extends StatelessWidget {
           Row(
             children: [
               Icon(icon, size: 20, color: iconColor),
-              const SizedBox(width: 8),
+              const SizedBox(width: 10),
               Text(
-                title,
+                title.toUpperCase(),
                 style: GoogleFonts.outfit(
                   fontSize: 12,
                   fontWeight: FontWeight.w800,
                   letterSpacing: 1.0,
-                  color: AppTheme.muted,
+                  color: AppTheme.text,
                 ),
               ),
             ],
           ),
-          const SizedBox(height: 12),
+          const SizedBox(height: 14),
           content,
         ],
       ),
     );
   }
 
-  Widget _buildCauseItem(String text) {
+  Widget _buildBulletItem(String text, Color dotColor) {
     return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 4.0),
+      padding: const EdgeInsets.only(bottom: 8.0),
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Container(
-            margin: const EdgeInsets.only(top: 6),
-            width: 6,
-            height: 6,
-            decoration: const BoxDecoration(
-              color: AppTheme.secondary,
-              shape: BoxShape.circle,
+          Padding(
+            padding: const EdgeInsets.only(top: 6.0),
+            child: Container(
+              width: 6,
+              height: 6,
+              decoration: BoxDecoration(color: dotColor, shape: BoxShape.circle),
             ),
           ),
           const SizedBox(width: 10),
           Expanded(
             child: Text(
               text,
-              style: GoogleFonts.outfit(fontSize: 14, color: AppTheme.text),
+              style: GoogleFonts.outfit(fontSize: 13, color: AppTheme.text, height: 1.4),
             ),
           ),
         ],

@@ -172,4 +172,16 @@ abstract class AppStrings {
   String get historyStatusHealthy;
   String get historyClearedSnack;
   String get historyRecordDeletedSnack;
+
+  // PDF Export & Diagnostics
+  String get exportPdfReportBtn;
+  String get exportPdfTooltip;
+  String get generatingPdfSnack;
+  String get smogCheckTitle;
+  String get smogCheckPassed;
+  String get smogCheckFailed;
+  String get smogCheckSubtitle;
+  String get dtcProbableCausesTitle;
+  String get dtcSymptomsTitle;
+  String get dtcRecommendedActionTitle;
 }

@@ -176,4 +176,16 @@ class EnglishStrings implements AppStrings {
   @override String get historyStatusHealthy => 'Healthy';
   @override String get historyClearedSnack => 'Diagnostic history cleared successfully.';
   @override String get historyRecordDeletedSnack => 'Record deleted.';
+
+  // PDF Export & Diagnostics
+  @override String get exportPdfReportBtn => 'EXPORT FULL REPORT TO PDF';
+  @override String get exportPdfTooltip => 'Export report to PDF';
+  @override String get generatingPdfSnack => 'Generating formal PDF report...';
+  @override String get smogCheckTitle => 'EMISSIONS TEST (SMOG READINESS)';
+  @override String get smogCheckPassed => 'PASSED FOR INSPECTION';
+  @override String get smogCheckFailed => 'ATTENTION / NOT READY';
+  @override String get smogCheckSubtitle => 'ECU emissions and mechanical inspection monitors';
+  @override String get dtcProbableCausesTitle => 'Probable Causes';
+  @override String get dtcSymptomsTitle => 'Common Symptoms';
+  @override String get dtcRecommendedActionTitle => 'Suggested Repair Action';
 }

@@ -10,6 +10,7 @@ import '../../features/settings/terms_privacy_screen.dart';
 
 import '../../features/obd_connection/connection_screen.dart';
 import '../../features/dtc/dtc_details_screen.dart';
+import '../../shared/models/dtc_model.dart';
 
 final initialRouteProvider = Provider<String>((ref) => '/');
 
@@ -32,7 +33,7 @@ final appRouterProvider = Provider<GoRouter>((ref) {
       ),
       GoRoute(
         path: '/dtc_details',
-        builder: (context, state) => const DtcDetailsScreen(),
+        builder: (context, state) => DtcDetailsScreen(dtc: state.extra as DTCModel?),
       ),
       GoRoute(
         path: '/home',

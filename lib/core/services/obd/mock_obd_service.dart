@@ -145,24 +145,60 @@ class MockOBDService implements OBDService {
     return [
       DTCModel(
         code: 'P0301',
-        description: 'Cylinder 1 Misfire Detected',
+        description: 'Fallo de encendido en Cilindro 1 (Misfire)',
         severity: 'High',
-        system: 'Powertrain / Engine',
+        system: 'Powertrain / Engine (PCM)',
         timestamp: DateTime.now().subtract(const Duration(hours: 2)),
+        probableCauses: [
+          'Bujía desgastada, con carbón o electrodo dañado',
+          'Bobina de encendido (Coil Pack) defectuosa o en corto',
+          'Inyector de combustible tapado o sucio',
+          'Baja compresión en el cilindro 1',
+        ],
+        symptoms: [
+          'Temblores perceptibles en ralentí',
+          'Pérdida súbita de potencia al acelerar',
+          'Luz Check Engine parpadeando bajo carga',
+          'Mayor consumo de gasolina y olor a combustible crudo',
+        ],
+        recommendedAction: 'Inspeccionar bujía del cilindro 1 e intercambiar la bobina con el cilindro 2 para verificar si la falla se traslada.',
       ),
       DTCModel(
         code: 'P0171',
-        description: 'System Too Lean (Bank 1)',
+        description: 'Mezcla de Combustible Demasiado Pobre (Banco 1)',
         severity: 'Medium',
         system: 'Fuel & Air Metering',
         timestamp: DateTime.now().subtract(const Duration(hours: 5)),
+        probableCauses: [
+          'Fuga de vacío en mangueras de admisión o múltiple',
+          'Sensor de Flujo de Masa de Aire (MAF) sucio o descalibrado',
+          'Filtro de combustible obstruido o baja presión de bomba',
+          'Válvula PCV trabada en posición abierta',
+        ],
+        symptoms: [
+          'Ralentí áspero o inestable',
+          'Vacilación o titubeo al pisar el acelerador',
+          'Pérdida de respuesta del turbo a bajas RPM',
+        ],
+        recommendedAction: 'Limpiar el sensor MAF con limpiador dieléctrico específico y verificar fugas de vacío con máquina de humo.',
       ),
       DTCModel(
         code: 'P0420',
-        description: 'Catalyst System Efficiency Below Threshold (Bank 1)',
+        description: 'Eficiencia del Catalizador por Debajo del Umbral (Banco 1)',
         severity: 'Medium',
-        system: 'Emissions Control',
+        system: 'Emissions & Exhaust Control',
         timestamp: DateTime.now().subtract(const Duration(days: 1)),
+        probableCauses: [
+          'Convertidor catalítico degradado o contaminado por aceite/gasolina',
+          'Sensor de Oxígeno trasero (Downstream O2) defectuoso o lento',
+          'Fuga en las juntas del escape antes o después del catalizador',
+        ],
+        symptoms: [
+          'Olor a huevos podridos / azufre en los gases de escape',
+          'El vehículo no pasa la prueba técnico-mecánica de emisiones',
+          'Luz Check Engine encendida de forma permanente',
+        ],
+        recommendedAction: 'Monitorear la señal de voltaje del sensor O2 trasero (debe ser estable a ~0.6V) antes de reemplazar el catalizador.',
       ),
     ];
   }

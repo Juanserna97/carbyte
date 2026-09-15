@@ -8,6 +8,7 @@ final historyProvider = StateNotifierProvider<HistoryNotifier, List<Map<String, 
 
 class HistoryNotifier extends StateNotifier<List<Map<String, dynamic>>> {
   static const String _storageKey = 'carbyte_diagnostic_history';
+  static const String _initializedKey = 'carbyte_history_initialized';
 
   HistoryNotifier() : super([]) {
     _loadHistory();
@@ -15,18 +16,24 @@ class HistoryNotifier extends StateNotifier<List<Map<String, dynamic>>> {
 
   Future<void> _loadHistory() async {
     final prefs = await SharedPreferences.getInstance();
+    final isInitialized = prefs.getBool(_initializedKey) ?? false;
     final jsonStr = prefs.getString(_storageKey);
 
-    if (jsonStr != null && jsonStr.isNotEmpty) {
-      try {
-        final List<dynamic> decoded = json.decode(jsonStr);
-        state = decoded.map((e) => Map<String, dynamic>.from(e as Map)).toList();
-        return;
-      } catch (_) {}
+    if (isInitialized) {
+      if (jsonStr != null && jsonStr.isNotEmpty) {
+        try {
+          final List<dynamic> decoded = json.decode(jsonStr);
+          state = decoded.map((e) => Map<String, dynamic>.from(e as Map)).toList();
+          return;
+        } catch (_) {}
+      }
+      state = [];
+      return;
     }
 
-    // Default seed records for initial demonstration
-    state = [
+    // First launch ever: seed initial records and mark initialized
+    await prefs.setBool(_initializedKey, true);
+    final initialRecords = [
       {
         'id': 'rec-1',
         'date': '14 Sep, 2026 • 15:42',
@@ -55,23 +62,28 @@ class HistoryNotifier extends StateNotifier<List<Map<String, dynamic>>> {
         'isResolved': true,
       },
     ];
+    state = initialRecords;
+    await prefs.setString(_storageKey, json.encode(initialRecords));
   }
 
   Future<void> clearAll() async {
     state = [];
     final prefs = await SharedPreferences.getInstance();
-    await prefs.remove(_storageKey);
+    await prefs.setBool(_initializedKey, true);
+    await prefs.setString(_storageKey, json.encode([]));
   }
 
   Future<void> deleteRecord(String id) async {
     state = state.where((item) => item['id'] != id).toList();
     final prefs = await SharedPreferences.getInstance();
+    await prefs.setBool(_initializedKey, true);
     await prefs.setString(_storageKey, json.encode(state));
   }
 
   Future<void> addRecord(Map<String, dynamic> record) async {
     state = [record, ...state];
     final prefs = await SharedPreferences.getInstance();
+    await prefs.setBool(_initializedKey, true);
     await prefs.setString(_storageKey, json.encode(state));
   }
 }
