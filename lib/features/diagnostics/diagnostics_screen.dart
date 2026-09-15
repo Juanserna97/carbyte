@@ -437,43 +437,55 @@ class _DiagnosticsScreenState extends ConsumerState<DiagnosticsScreen> {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Row(
-                children: [
-                  Icon(
-                    LucideIcons.shieldCheck,
-                    size: 18,
-                    color: smogState.isPassed ? AppTheme.success : AppTheme.warning,
-                  ),
-                  const SizedBox(width: 8),
-                  Text(
-                    s.smogCheckTitle,
-                    style: GoogleFonts.outfit(
-                      fontSize: 11,
-                      fontWeight: FontWeight.w800,
-                      letterSpacing: 0.8,
-                      color: AppTheme.text,
-                    ),
-                  ),
-                ],
+              Icon(
+                LucideIcons.shieldCheck,
+                size: 18,
+                color: smogState.isPassed ? AppTheme.success : AppTheme.warning,
               ),
+              const SizedBox(width: 8),
+              Expanded(
+                child: Text(
+                  s.smogCheckTitle,
+                  style: GoogleFonts.outfit(
+                    fontSize: 12,
+                    fontWeight: FontWeight.w800,
+                    letterSpacing: 0.8,
+                    color: AppTheme.text,
+                  ),
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                ),
+              ),
+              const SizedBox(width: 8),
               Container(
-                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
                 decoration: BoxDecoration(
                   color: (smogState.isPassed ? AppTheme.success : AppTheme.warning).withValues(alpha: 0.15),
-                  borderRadius: BorderRadius.circular(6),
+                  borderRadius: BorderRadius.circular(8),
                   border: Border.all(
                     color: (smogState.isPassed ? AppTheme.success : AppTheme.warning).withValues(alpha: 0.4),
                   ),
                 ),
-                child: Text(
-                  smogState.isPassed ? s.smogCheckPassed : s.smogCheckFailed,
-                  style: GoogleFonts.outfit(
-                    fontSize: 9,
-                    fontWeight: FontWeight.w800,
-                    color: smogState.isPassed ? AppTheme.success : AppTheme.warning,
-                  ),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Icon(
+                      smogState.isPassed ? Icons.check_circle_rounded : Icons.info_outline_rounded,
+                      size: 12,
+                      color: smogState.isPassed ? AppTheme.success : AppTheme.warning,
+                    ),
+                    const SizedBox(width: 4),
+                    Text(
+                      smogState.isPassed ? s.smogCheckPassed : s.smogCheckFailed,
+                      style: GoogleFonts.outfit(
+                        fontSize: 10,
+                        fontWeight: FontWeight.w800,
+                        letterSpacing: 0.5,
+                        color: smogState.isPassed ? AppTheme.success : AppTheme.warning,
+                      ),
+                    ),
+                  ],
                 ),
               ),
             ],

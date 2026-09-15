@@ -181,9 +181,9 @@ class SpanishStrings implements AppStrings {
   @override String get exportPdfReportBtn => 'EXPORTAR REPORTE COMPLETO A PDF';
   @override String get exportPdfTooltip => 'Exportar reporte en PDF';
   @override String get generatingPdfSnack => 'Generando reporte formal en PDF...';
-  @override String get smogCheckTitle => 'TEST DE EMISIONES (SMOG READINESS)';
-  @override String get smogCheckPassed => 'APTO PARA REVISIÓN';
-  @override String get smogCheckFailed => 'OBSERVACIÓN / NO LISTO';
+  @override String get smogCheckTitle => 'TEST DE EMISIONES';
+  @override String get smogCheckPassed => 'APROBADO';
+  @override String get smogCheckFailed => 'NO LISTO';
   @override String get smogCheckSubtitle => 'Monitores de emisión de gases y preparación técnico-mecánica';
   @override String get dtcProbableCausesTitle => 'Causas Más Probables';
   @override String get dtcSymptomsTitle => 'Síntomas Comunes';

@@ -1,4 +1,5 @@
 import 'dart:typed_data';
+import 'package:flutter/services.dart' show rootBundle;
 import 'package:pdf/pdf.dart';
 import 'package:pdf/widgets.dart' as pw;
 import 'package:printing/printing.dart';
@@ -24,11 +25,39 @@ class DiagnosticPdfService {
 
     final hasIssues = dtcs.isNotEmpty;
 
+    // Load brand logo & app icon
+    pw.MemoryImage? appIconImage;
+    pw.MemoryImage? brandLogoImage;
+    try {
+      final iconData = await rootBundle.load('assets/icon.png');
+      appIconImage = pw.MemoryImage(iconData.buffer.asUint8List());
+    } catch (_) {
+      try {
+        final iconData = await rootBundle.load('Assets/icon.png');
+        appIconImage = pw.MemoryImage(iconData.buffer.asUint8List());
+      } catch (_) {}
+    }
+
+    try {
+      final logoData = await rootBundle.load('assets/carbyte_logo_print.png');
+      brandLogoImage = pw.MemoryImage(logoData.buffer.asUint8List());
+    } catch (_) {
+      try {
+        final logoData = await rootBundle.load('assets/carbyte_logo.png');
+        brandLogoImage = pw.MemoryImage(logoData.buffer.asUint8List());
+      } catch (_) {}
+    }
+
     pdf.addPage(
       pw.MultiPage(
         pageFormat: PdfPageFormat.a4,
         margin: const pw.EdgeInsets.all(32),
-        header: (context) => _buildHeader(reportId, formattedDate),
+        header: (context) => _buildHeader(
+          reportId,
+          formattedDate,
+          appIcon: appIconImage,
+          logoImage: brandLogoImage,
+        ),
         footer: (context) => _buildFooter(context),
         build: (context) => [
           pw.SizedBox(height: 16),
@@ -70,7 +99,12 @@ class DiagnosticPdfService {
     );
   }
 
-  static pw.Widget _buildHeader(String reportId, String date) {
+  static pw.Widget _buildHeader(
+    String reportId,
+    String date, {
+    pw.MemoryImage? appIcon,
+    pw.MemoryImage? logoImage,
+  }) {
     return pw.Container(
       padding: const pw.EdgeInsets.only(bottom: 12),
       decoration: const pw.BoxDecoration(
@@ -80,30 +114,58 @@ class DiagnosticPdfService {
       ),
       child: pw.Row(
         mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
+        crossAxisAlignment: pw.CrossAxisAlignment.center,
         children: [
-          pw.Column(
-            crossAxisAlignment: pw.CrossAxisAlignment.start,
+          pw.Row(
+            crossAxisAlignment: pw.CrossAxisAlignment.center,
             children: [
-              pw.Text(
-                'CARBYTE',
-                style: pw.TextStyle(
-                  fontSize: 22,
-                  fontWeight: pw.FontWeight.bold,
-                  color: PdfColor.fromHex('#00E5FF'),
+              if (appIcon != null) ...[
+                pw.ClipRRect(
+                  horizontalRadius: 6,
+                  verticalRadius: 6,
+                  child: pw.Image(
+                    appIcon,
+                    width: 36,
+                    height: 36,
+                  ),
                 ),
-              ),
-              pw.Text(
-                'SISTEMA PROFESIONAL DE TELEMETRÍA Y DIAGNÓSTICO',
-                style: const pw.TextStyle(
-                  fontSize: 8,
-                  color: PdfColors.grey700,
-                  letterSpacing: 1.0,
-                ),
+                pw.SizedBox(width: 10),
+              ],
+              pw.Column(
+                crossAxisAlignment: pw.CrossAxisAlignment.start,
+                mainAxisAlignment: pw.MainAxisAlignment.center,
+                children: [
+                  if (logoImage != null)
+                    pw.Image(
+                      logoImage,
+                      height: 20,
+                      fit: pw.BoxFit.contain,
+                    )
+                  else
+                    pw.Text(
+                      'CARBYTE',
+                      style: pw.TextStyle(
+                        fontSize: 20,
+                        fontWeight: pw.FontWeight.bold,
+                        color: PdfColor.fromHex('#0B132B'),
+                      ),
+                    ),
+                  pw.SizedBox(height: 3),
+                  pw.Text(
+                    'SISTEMA PROFESIONAL DE TELEMETRÍA Y DIAGNÓSTICO',
+                    style: const pw.TextStyle(
+                      fontSize: 7.5,
+                      color: PdfColors.grey700,
+                      letterSpacing: 0.8,
+                    ),
+                  ),
+                ],
               ),
             ],
           ),
           pw.Column(
             crossAxisAlignment: pw.CrossAxisAlignment.end,
+            mainAxisAlignment: pw.MainAxisAlignment.center,
             children: [
               pw.Text(
                 'REPORTE: $reportId',
@@ -113,9 +175,10 @@ class DiagnosticPdfService {
                   color: PdfColors.grey900,
                 ),
               ),
+              pw.SizedBox(height: 2),
               pw.Text(
                 'FECHA: $date',
-                style: const pw.TextStyle(fontSize: 9, color: PdfColors.grey700),
+                style: const pw.TextStyle(fontSize: 8.5, color: PdfColors.grey700),
               ),
             ],
           ),
