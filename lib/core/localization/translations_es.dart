@@ -210,4 +210,43 @@ class SpanishStrings implements AppStrings {
   @override String get engineTab => 'Motor & Rendimiento';
   @override String get intakeTab => 'Admisión & Temperatura';
   @override String get fuelElectricTab => 'Combustible & Batería';
+
+  // Vehicle Connection & Status
+  @override String get connectedVehicle => 'Vehículo Conectado';
+  @override String get activeObdLink => 'Enlace ECU Estable • Monitoreo Activo';
+  @override String get readingVin => 'Leyendo VIN...';
+  @override String get decodingVin => 'Decodificando VIN...';
+  @override String get linkingObdBus => 'Sincronizando bus CAN...';
+
+  // Scan Modules
+  @override String get moduleEngine => 'Motor (PCM / ECM)';
+  @override String get moduleTransmission => 'Transmisión (TCM)';
+  @override String get moduleBrakes => 'Frenos ABS / ESP';
+  @override String get moduleAirbag => 'Bolsas de Aire (SRS)';
+  @override String get moduleBody => 'Módulo Carrocería (BCM)';
+  @override String get moduleExhaust => 'Sensores de Escape y Catalizador';
+
+  // Emissions Monitors
+  @override String get monitorMisfire => 'Fallo de Encendido (Misfire)';
+  @override String get monitorMisfireDesc => 'Supervisa detonaciones erráticas en los cilindros';
+  @override String get monitorFuelSystem => 'Sistema de Combustible';
+  @override String get monitorFuelSystemDesc => 'Control de mezcla aire/combustible y bucle cerrado';
+  @override String get monitorCcm => 'Componentes Globales (CCM)';
+  @override String get monitorCcmDesc => 'Supervisa sensores analógicos y actuadores clave';
+  @override String get monitorCatalyst => 'Convertidor Catalítico';
+  @override String get monitorCatalystDesc => 'Eficiencia en reducción de gases NOx y CO';
+  @override String get monitorEvap => 'Sistema Evaporativo (EVAP)';
+  @override String get monitorEvapDesc => 'Captura y purga de vapores del tanque de combustible';
+  @override String get monitorO2Sensor => 'Sensores de Oxígeno (O2)';
+  @override String get monitorO2SensorDesc => 'Respuesta y conmutación de sondas lambda';
+  @override String get monitorO2Heater => 'Calefactor Sensor O2';
+  @override String get monitorO2HeaterDesc => 'Resistencia calefactora para temperatura de servicio';
+  @override String get monitorEgr => 'Sistema EGR / VVT';
+  @override String get monitorEgrDesc => 'Recirculación de gases y sincronización variable';
+  @override String get statusReady => 'Listo / Aprobado';
+  @override String get statusPendingMonitor => 'No Completado';
+  @override String get verified => 'VERIFICADO';
+  @override String get viewDetails => 'Ver detalle';
+  @override String get hideDetails => 'Ocultar';
+  @override String get monitorsReadySuffix => 'Monitores Listos';
 }

@@ -2,6 +2,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../services/obd/mock_obd_service.dart';
 import '../services/obd/real_obd_service.dart';
 import '../services/obd/obd_service.dart';
+import '../localization/locale_provider.dart';
 import '../../shared/models/dtc_model.dart';
 
 // Toggles between mock data (simulator) and real BLE data
@@ -140,14 +141,27 @@ class ScanState {
 }
 
 class DiagnosticNotifier extends StateNotifier<ScanState> {
-  final OBDService _service;
+  final Ref _ref;
 
-  DiagnosticNotifier(this._service) : super(const ScanState());
+  DiagnosticNotifier(this._ref) : super(const ScanState());
 
   Future<void> startScan() async {
-    state = const ScanState(isScanning: true, progress: 0.0, currentModule: 'Initializing OBD-II Bus...');
-    
-    final modules = ScanState.defaultModules;
+    final s = _ref.read(stringsProvider);
+    final modules = [
+      s.moduleEngine,
+      s.moduleTransmission,
+      s.moduleBrakes,
+      s.moduleAirbag,
+      s.moduleBody,
+      s.moduleExhaust,
+    ];
+
+    state = ScanState(
+      isScanning: true,
+      progress: 0.0,
+      currentModule: s.linkingObdBus,
+      modulesList: modules,
+    );
 
     final completed = <String>[];
 
@@ -155,7 +169,7 @@ class DiagnosticNotifier extends StateNotifier<ScanState> {
       if (!mounted) return; // Prevent updating state if disposed
       await Future.delayed(const Duration(milliseconds: 650));
       completed.add(modules[i]);
-      final nextModule = (i + 1 < modules.length) ? modules[i + 1] : 'Finalizing Diagnostics...';
+      final nextModule = (i + 1 < modules.length) ? modules[i + 1] : s.statusReady;
       if (!mounted) return;
       state = state.copyWith(
         progress: (i + 1) / modules.length,
@@ -164,13 +178,14 @@ class DiagnosticNotifier extends StateNotifier<ScanState> {
       );
     }
 
-    final dtcs = await _service.scanDTCs();
+    final service = _ref.read(obdServiceProvider);
+    final dtcs = await service.scanDTCs();
     if (!mounted) return;
     state = state.copyWith(
       isScanning: false,
       isFinished: true,
       progress: 1.0,
-      currentModule: 'Completed',
+      currentModule: s.statusReady,
       foundDTCs: dtcs,
     );
   }
@@ -180,12 +195,12 @@ class DiagnosticNotifier extends StateNotifier<ScanState> {
   }
 
   Future<void> clearDTCs() async {
-    await _service.clearDTCs();
+    final service = _ref.read(obdServiceProvider);
+    await service.clearDTCs();
     state = state.copyWith(foundDTCs: []);
   }
 }
 
 final diagnosticScanProvider = StateNotifierProvider<DiagnosticNotifier, ScanState>((ref) {
-  final service = ref.watch(obdServiceProvider);
-  return DiagnosticNotifier(service);
+  return DiagnosticNotifier(ref);
 });

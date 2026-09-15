@@ -210,4 +210,43 @@ class EnglishStrings implements AppStrings {
   @override String get engineTab => 'Engine & Performance';
   @override String get intakeTab => 'Intake & Temperature';
   @override String get fuelElectricTab => 'Fuel & Battery';
+
+  // Vehicle Connection & Status
+  @override String get connectedVehicle => 'Connected Vehicle';
+  @override String get activeObdLink => 'ECU Link Stable • Live Monitoring';
+  @override String get readingVin => 'Reading VIN...';
+  @override String get decodingVin => 'Decoding VIN...';
+  @override String get linkingObdBus => 'Synchronizing CAN bus...';
+
+  // Scan Modules
+  @override String get moduleEngine => 'Engine (PCM / ECM)';
+  @override String get moduleTransmission => 'Transmission (TCM)';
+  @override String get moduleBrakes => 'Anti-Lock Brakes (ABS / ESP)';
+  @override String get moduleAirbag => 'Airbags & Restraints (SRS)';
+  @override String get moduleBody => 'Body Control Module (BCM)';
+  @override String get moduleExhaust => 'Exhaust & Catalyst Sensors';
+
+  // Emissions Monitors
+  @override String get monitorMisfire => 'Misfire Detection';
+  @override String get monitorMisfireDesc => 'Monitors erratic cylinder combustion';
+  @override String get monitorFuelSystem => 'Fuel System';
+  @override String get monitorFuelSystemDesc => 'Air/Fuel ratio feedback and closed-loop control';
+  @override String get monitorCcm => 'Comprehensive Components (CCM)';
+  @override String get monitorCcmDesc => 'Monitors vital analog sensors and electronic actuators';
+  @override String get monitorCatalyst => 'Catalytic Converter';
+  @override String get monitorCatalystDesc => 'Efficiency in reducing NOx and CO exhaust emissions';
+  @override String get monitorEvap => 'Evaporative System (EVAP)';
+  @override String get monitorEvapDesc => 'Fuel tank vapor containment and purge operation';
+  @override String get monitorO2Sensor => 'Oxygen Sensors (O2)';
+  @override String get monitorO2SensorDesc => 'Upstream and downstream lambda sensor switching speed';
+  @override String get monitorO2Heater => 'Oxygen Sensor Heater';
+  @override String get monitorO2HeaterDesc => 'Heater circuit to achieve proper operating temperature';
+  @override String get monitorEgr => 'EGR / VVT System';
+  @override String get monitorEgrDesc => 'Exhaust gas recirculation and variable valve timing';
+  @override String get statusReady => 'Ready / Passed';
+  @override String get statusPendingMonitor => 'Incomplete';
+  @override String get verified => 'VERIFIED';
+  @override String get viewDetails => 'View Details';
+  @override String get hideDetails => 'Hide';
+  @override String get monitorsReadySuffix => 'Monitors Ready';
 }

@@ -26,4 +26,5 @@ abstract class OBDService {
   Future<void> clearDTCs();
   
   Future<String?> readVIN();
+  Future<Map<String, bool>> readEmissionsReadiness();
 }

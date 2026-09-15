@@ -188,7 +188,7 @@ class _DiagnosticsScreenState extends ConsumerState<DiagnosticsScreen> {
               final isDone = index < (scanState.progress * scanState.modulesList.length).floor();
               final isCurrent = index == (scanState.progress * scanState.modulesList.length).floor();
 
-              return _buildModuleItem(module, isDone, isCurrent);
+              return _buildModuleItem(module, isDone, isCurrent, s);
             },
           ),
         ),
@@ -196,7 +196,7 @@ class _DiagnosticsScreenState extends ConsumerState<DiagnosticsScreen> {
     );
   }
 
-  Widget _buildModuleItem(String name, bool isDone, bool isCurrent) {
+  Widget _buildModuleItem(String name, bool isDone, bool isCurrent, AppStrings s) {
     return Container(
       margin: const EdgeInsets.only(bottom: 8),
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
@@ -230,7 +230,7 @@ class _DiagnosticsScreenState extends ConsumerState<DiagnosticsScreen> {
             ),
           ),
           Text(
-            isDone ? 'VERIFICADO' : 'PENDIENTE',
+            isDone ? s.verified : s.statusPendingMonitor,
             style: GoogleFonts.outfit(
               fontSize: 10,
               fontWeight: FontWeight.w700,
@@ -549,7 +549,7 @@ class _DiagnosticsScreenState extends ConsumerState<DiagnosticsScreen> {
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
               Text(
-                '${smogState.readyCount} de ${smogState.totalCount} Monitores Listos',
+                '${smogState.readyCount} / ${smogState.totalCount} ${s.monitorsReadySuffix}',
                 style: GoogleFonts.sourceCodePro(fontSize: 10, color: AppTheme.muted, fontWeight: FontWeight.w700),
               ),
               InkWell(
@@ -561,7 +561,7 @@ class _DiagnosticsScreenState extends ConsumerState<DiagnosticsScreen> {
                 child: Row(
                   children: [
                     Text(
-                      _showMonitorsDetails ? 'Ocultar' : 'Ver detalle',
+                      _showMonitorsDetails ? s.hideDetails : s.viewDetails,
                       style: GoogleFonts.outfit(fontSize: 11, color: AppTheme.secondary, fontWeight: FontWeight.w700),
                     ),
                     Icon(
@@ -615,7 +615,7 @@ class _DiagnosticsScreenState extends ConsumerState<DiagnosticsScreen> {
                             ),
                             const SizedBox(width: 4),
                             Text(
-                              m.isReady ? 'LISTO' : 'PENDIENTE',
+                              m.isReady ? s.statusReady : s.statusPendingMonitor,
                               style: GoogleFonts.outfit(
                                 fontSize: 9,
                                 fontWeight: FontWeight.w800,

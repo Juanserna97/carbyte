@@ -156,7 +156,9 @@ class HomeScreen extends ConsumerWidget {
                               const SizedBox(height: 4),
                               Text(
                                 isConnected
-                                    ? '4MATIC+ • 2.0L Turbo • 382 HP • 2024'
+                                    ? (vehicleState.subtitle.isNotEmpty
+                                        ? vehicleState.subtitle
+                                        : s.activeObdLink)
                                     : s.vehicleDisconnectedSubtitle,
                                 style: GoogleFonts.outfit(
                                   fontSize: 13,

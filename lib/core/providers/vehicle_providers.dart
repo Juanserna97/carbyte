@@ -6,18 +6,26 @@ import '../localization/locale_provider.dart';
 class VehicleState {
   final String vin;
   final String vehicleName;
+  final String subtitle;
   final bool isLoading;
 
   const VehicleState({
     this.vin = '',
     this.vehicleName = '',
+    this.subtitle = '',
     this.isLoading = false,
   });
 
-  VehicleState copyWith({String? vin, String? vehicleName, bool? isLoading}) {
+  VehicleState copyWith({
+    String? vin,
+    String? vehicleName,
+    String? subtitle,
+    bool? isLoading,
+  }) {
     return VehicleState(
       vin: vin ?? this.vin,
       vehicleName: vehicleName ?? this.vehicleName,
+      subtitle: subtitle ?? this.subtitle,
       isLoading: isLoading ?? this.isLoading,
     );
   }
@@ -33,30 +41,54 @@ class VehicleNotifier extends StateNotifier<VehicleState> {
       if (next.value == true) {
         _fetchVehicleInfo();
       } else {
-        state = const VehicleState();
+        final s = _ref.read(stringsProvider);
+        state = VehicleState(
+          vehicleName: s.vehicleDisconnectedTitle,
+          subtitle: s.vehicleDisconnectedSubtitle,
+        );
       }
     });
   }
 
   Future<void> _fetchVehicleInfo() async {
     final s = _ref.read(stringsProvider);
-    state = state.copyWith(isLoading: true, vehicleName: 'Leyendo VIN...');
-    
+    state = state.copyWith(
+      isLoading: true,
+      vehicleName: s.connectedVehicle,
+      subtitle: s.readingVin,
+    );
+
     final obdService = _ref.read(obdServiceProvider);
     final vin = await obdService.readVIN();
 
     if (vin != null && vin.isNotEmpty) {
-      state = state.copyWith(vin: vin, vehicleName: 'Decodificando VIN...');
+      state = state.copyWith(
+        vin: vin,
+        subtitle: s.decodingVin,
+      );
+
       final name = await _decoderService.decodeVIN(vin);
-      
-      // If API returns Spanish fallback, convert it to localized version
-      if (name == 'Vehículo Desconocido') {
-        state = state.copyWith(isLoading: false, vehicleName: s.vehicleDisconnectedTitle);
+
+      if (name == 'Vehículo Desconocido' || name == 'Error de Conexión') {
+        state = state.copyWith(
+          isLoading: false,
+          vehicleName: s.connectedVehicle,
+          subtitle: 'VIN: $vin • ${s.activeObdLink}',
+        );
       } else {
-        state = state.copyWith(isLoading: false, vehicleName: name);
+        state = state.copyWith(
+          isLoading: false,
+          vehicleName: name,
+          subtitle: 'VIN: $vin • ISO 15765-4 (CAN)',
+        );
       }
     } else {
-      state = state.copyWith(isLoading: false, vehicleName: s.vehicleDisconnectedTitle);
+      // Vehicle connected over OBD, but VIN Mode 09 PID 02 not exposed by ECU
+      state = state.copyWith(
+        isLoading: false,
+        vehicleName: s.connectedVehicle,
+        subtitle: s.activeObdLink,
+      );
     }
   }
 }

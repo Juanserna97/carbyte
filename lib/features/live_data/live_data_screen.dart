@@ -36,20 +36,23 @@ class _LiveDataScreenState extends ConsumerState<LiveDataScreen> {
     final baroAsync = ref.watch(baroStreamProvider);
     final turboAsync = ref.watch(turboBoostStreamProvider);
 
-    final rpm = rpmAsync.value ?? 1840.0;
-    final speed = speedAsync.value ?? 48.0;
-    final coolant = coolantAsync.value ?? 91.0;
-    final load = loadAsync.value ?? 34.0;
-    final throttle = throttleAsync.value ?? 18.0;
-    final battery = batteryAsync.value ?? 14.2;
-    final intake = intakeAsync.value ?? 28.0;
-    final maf = mafAsync.value ?? 4.8;
-    final turbo = turboAsync.value ?? 0.0;
-    final stft = stftAsync.value ?? 1.5;
-    final ltft = ltftAsync.value ?? 2.3;
-    final timing = timingAsync.value ?? 14.0;
-    final fuelLevel = fuelLevelAsync.value ?? 68.0;
-    final baro = baroAsync.value ?? 101.3;
+    final connectionAsync = ref.watch(connectionStateProvider);
+    final isConnected = connectionAsync.value ?? false;
+
+    final rpm = isConnected ? (rpmAsync.value ?? 0.0) : 0.0;
+    final speed = isConnected ? (speedAsync.value ?? 0.0) : 0.0;
+    final coolant = isConnected ? (coolantAsync.value ?? 0.0) : 0.0;
+    final load = isConnected ? (loadAsync.value ?? 0.0) : 0.0;
+    final throttle = isConnected ? (throttleAsync.value ?? 0.0) : 0.0;
+    final battery = isConnected ? (batteryAsync.value ?? 0.0) : 0.0;
+    final intake = isConnected ? (intakeAsync.value ?? 0.0) : 0.0;
+    final maf = isConnected ? (mafAsync.value ?? 0.0) : 0.0;
+    final turbo = isConnected ? (turboAsync.value ?? 0.0) : 0.0;
+    final stft = isConnected ? (stftAsync.value ?? 0.0) : 0.0;
+    final ltft = isConnected ? (ltftAsync.value ?? 0.0) : 0.0;
+    final timing = isConnected ? (timingAsync.value ?? 0.0) : 0.0;
+    final fuelLevel = isConnected ? (fuelLevelAsync.value ?? 0.0) : 0.0;
+    final baro = isConnected ? (baroAsync.value ?? 0.0) : 0.0;
 
     // Accumulate points for chart
     if (_rpmSpots.isEmpty || _rpmSpots.last.y != rpm) {

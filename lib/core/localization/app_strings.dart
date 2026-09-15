@@ -206,4 +206,43 @@ abstract class AppStrings {
   String get engineTab;
   String get intakeTab;
   String get fuelElectricTab;
+
+  // Vehicle Connection & Status
+  String get connectedVehicle;
+  String get activeObdLink;
+  String get readingVin;
+  String get decodingVin;
+  String get linkingObdBus;
+
+  // Scan Modules
+  String get moduleEngine;
+  String get moduleTransmission;
+  String get moduleBrakes;
+  String get moduleAirbag;
+  String get moduleBody;
+  String get moduleExhaust;
+
+  // Emissions Monitors
+  String get monitorMisfire;
+  String get monitorMisfireDesc;
+  String get monitorFuelSystem;
+  String get monitorFuelSystemDesc;
+  String get monitorCcm;
+  String get monitorCcmDesc;
+  String get monitorCatalyst;
+  String get monitorCatalystDesc;
+  String get monitorEvap;
+  String get monitorEvapDesc;
+  String get monitorO2Sensor;
+  String get monitorO2SensorDesc;
+  String get monitorO2Heater;
+  String get monitorO2HeaterDesc;
+  String get monitorEgr;
+  String get monitorEgrDesc;
+  String get statusReady;
+  String get statusPendingMonitor;
+  String get verified;
+  String get viewDetails;
+  String get hideDetails;
+  String get monitorsReadySuffix;
 }

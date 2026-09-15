@@ -264,4 +264,19 @@ class MockOBDService implements OBDService {
     await Future.delayed(const Duration(seconds: 1));
     return '1G1RC6E45BUXXXXXX'; // Mock Chevrolet Volt VIN
   }
+
+  @override
+  Future<Map<String, bool>> readEmissionsReadiness() async {
+    await Future.delayed(const Duration(milliseconds: 300));
+    return {
+      'misfire': true,
+      'fuel': true,
+      'ccm': true,
+      'catalyst': true,
+      'evap': true, // EVAP is ready!
+      'o2': true,
+      'o2_heater': true,
+      'egr': true,
+    };
+  }
 }

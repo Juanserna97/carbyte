@@ -1,17 +1,37 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import '../localization/locale_provider.dart';
+import 'obd_providers.dart';
 
 class EmissionsMonitor {
+  final String key;
   final String name;
   final String description;
   final bool isReady;
   final bool isApplicable;
 
   const EmissionsMonitor({
+    this.key = '',
     required this.name,
     required this.description,
     required this.isReady,
     this.isApplicable = true,
   });
+
+  EmissionsMonitor copyWith({
+    String? key,
+    String? name,
+    String? description,
+    bool? isReady,
+    bool? isApplicable,
+  }) {
+    return EmissionsMonitor(
+      key: key ?? this.key,
+      name: name ?? this.name,
+      description: description ?? this.description,
+      isReady: isReady ?? this.isReady,
+      isApplicable: isApplicable ?? this.isApplicable,
+    );
+  }
 }
 
 class SmogReadinessState {
@@ -28,58 +48,99 @@ class SmogReadinessState {
   });
 }
 
-final emissionsMonitorsProvider = Provider<SmogReadinessState>((ref) {
-  final monitors = [
-    const EmissionsMonitor(
-      name: 'Fallo de Encendido (Misfire)',
-      description: 'Supervisa detonaciones erráticas en los cilindros',
-      isReady: true,
-    ),
-    const EmissionsMonitor(
-      name: 'Sistema de Combustible',
-      description: 'Control de mezcla aire/combustible y bucle cerrado',
-      isReady: true,
-    ),
-    const EmissionsMonitor(
-      name: 'Componentes Globales (CCM)',
-      description: 'Supervisa sensores analógicos y actuadores clave',
-      isReady: true,
-    ),
-    const EmissionsMonitor(
-      name: 'Convertidor Catalítico',
-      description: 'Eficiencia en reducción de gases NOx y CO',
-      isReady: true,
-    ),
-    const EmissionsMonitor(
-      name: 'Sistema Evaporativo (EVAP)',
-      description: 'Captura y purga de vapores del tanque de gasolina',
-      isReady: false,
-    ),
-    const EmissionsMonitor(
-      name: 'Sensores de Oxígeno (O2)',
-      description: 'Respuesta y conmutación de sensores delantero y trasero',
-      isReady: true,
-    ),
-    const EmissionsMonitor(
-      name: 'Calefactor Sensor O2',
-      description: 'Resistencia calefactora para temperatura de operación',
-      isReady: true,
-    ),
-    const EmissionsMonitor(
-      name: 'Sistema EGR / VVT',
-      description: 'Recirculación de escape y variación de válvulas',
-      isReady: true,
-    ),
-  ];
+class EmissionsNotifier extends StateNotifier<SmogReadinessState> {
+  final Ref _ref;
+  Map<String, bool> _lastReadiness = const {};
 
-  final readyCount = monitors.where((m) => m.isReady).length;
-  // Standard emission rule: usually allowed at most 1 monitor incomplete on newer vehicles
-  final isPassed = (monitors.length - readyCount) <= 1;
+  EmissionsNotifier(this._ref) : super(_buildState(_ref.read(stringsProvider), const {})) {
+    // Re-evaluate when connected to OBD
+    _ref.listen<AsyncValue<bool>>(connectionStateProvider, (previous, next) {
+      if (next.value == true) {
+        refreshReadiness();
+      }
+    });
 
-  return SmogReadinessState(
-    isPassed: isPassed,
-    readyCount: readyCount,
-    totalCount: monitors.length,
-    monitors: monitors,
-  );
+    // Re-localize when language changes
+    _ref.listen<AppStrings>(stringsProvider, (previous, next) {
+      state = _buildState(next, _lastReadiness);
+    });
+  }
+
+  static SmogReadinessState _buildState(AppStrings s, Map<String, bool> readiness) {
+    final monitors = [
+      EmissionsMonitor(
+        key: 'misfire',
+        name: s.monitorMisfire,
+        description: s.monitorMisfireDesc,
+        isReady: readiness['misfire'] ?? true,
+      ),
+      EmissionsMonitor(
+        key: 'fuel',
+        name: s.monitorFuelSystem,
+        description: s.monitorFuelSystemDesc,
+        isReady: readiness['fuel'] ?? true,
+      ),
+      EmissionsMonitor(
+        key: 'ccm',
+        name: s.monitorCcm,
+        description: s.monitorCcmDesc,
+        isReady: readiness['ccm'] ?? true,
+      ),
+      EmissionsMonitor(
+        key: 'catalyst',
+        name: s.monitorCatalyst,
+        description: s.monitorCatalystDesc,
+        isReady: readiness['catalyst'] ?? true,
+      ),
+      EmissionsMonitor(
+        key: 'evap',
+        name: s.monitorEvap,
+        description: s.monitorEvapDesc,
+        isReady: readiness['evap'] ?? true, // Dynamic and defaults to true
+      ),
+      EmissionsMonitor(
+        key: 'o2',
+        name: s.monitorO2Sensor,
+        description: s.monitorO2SensorDesc,
+        isReady: readiness['o2'] ?? true,
+      ),
+      EmissionsMonitor(
+        key: 'o2_heater',
+        name: s.monitorO2Heater,
+        description: s.monitorO2HeaterDesc,
+        isReady: readiness['o2_heater'] ?? true,
+      ),
+      EmissionsMonitor(
+        key: 'egr',
+        name: s.monitorEgr,
+        description: s.monitorEgrDesc,
+        isReady: readiness['egr'] ?? true,
+      ),
+    ];
+
+    final readyCount = monitors.where((m) => m.isReady).length;
+    final isPassed = (monitors.length - readyCount) <= 1;
+
+    return SmogReadinessState(
+      isPassed: isPassed,
+      readyCount: readyCount,
+      totalCount: monitors.length,
+      monitors: monitors,
+    );
+  }
+
+  Future<void> refreshReadiness() async {
+    final obdService = _ref.read(obdServiceProvider);
+    try {
+      _lastReadiness = await obdService.readEmissionsReadiness();
+    } catch (_) {
+      _lastReadiness = const {};
+    }
+    final s = _ref.read(stringsProvider);
+    state = _buildState(s, _lastReadiness);
+  }
+}
+
+final emissionsMonitorsProvider = StateNotifierProvider<EmissionsNotifier, SmogReadinessState>((ref) {
+  return EmissionsNotifier(ref);
 });

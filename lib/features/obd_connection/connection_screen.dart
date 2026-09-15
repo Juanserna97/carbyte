@@ -21,14 +21,6 @@ class _ConnectionScreenState extends ConsumerState<ConnectionScreen> {
 
   final List<Map<String, dynamic>> _devices = [
     {
-      'id': 'VGATE-BLE-409',
-      'name': 'vGate iCar Pro BLE 4.0',
-      'protocol': 'Auto Detect (ELM327 v2.2)',
-      'signal': -58,
-      'recommended': true,
-      'device': null,
-    },
-    {
       'id': 'CARBYTE-SIM-01',
       'name': 'CARBYTE Simulator Link',
       'protocol': 'ISO 15765-4 (CAN 11/500)',
@@ -52,22 +44,38 @@ class _ConnectionScreenState extends ConsumerState<ConnectionScreen> {
           final name = r.device.platformName;
           final nameLower = name.toLowerCase();
           
-          bool isObd = nameLower.contains('obd') || 
-                       nameLower.contains('vgate') || 
-                       nameLower.contains('vlink') || 
-                       nameLower.contains('elm') || 
-                       nameLower.contains('konnwei') || 
-                       nameLower.contains('car') ||
-                       nameLower.contains('ble');
+          final hasObdUuid = r.advertisementData.serviceUuids.any((u) {
+            final s = u.str128.toLowerCase();
+            return s.contains('fff0') ||
+                s.contains('ffe0') ||
+                s.contains('6e40') ||
+                s.contains('4953') ||
+                s.contains('18f0') ||
+                s.contains('e781');
+          });
+
+          bool isObd = hasObdUuid ||
+              nameLower.contains('obd') || 
+              nameLower.contains('vgate') || 
+              nameLower.contains('vlink') || 
+              nameLower.contains('elm') || 
+              nameLower.contains('konnwei') || 
+              nameLower.contains('car') ||
+              nameLower.contains('link') ||
+              nameLower.contains('ios') ||
+              nameLower.contains('auto') ||
+              nameLower.contains('viecar') ||
+              nameLower.contains('bimmer') ||
+              nameLower.contains('ble');
                        
-          // Avoid duplicates and non-OBD devices
+          // Avoid duplicates and insert real devices at the top
           if (isObd && !_devices.any((d) => d['id'] == id)) {
-            _devices.add({
+            _devices.insert(0, {
               'id': id,
-              'name': name.isNotEmpty ? name : 'Unknown Device',
-              'protocol': 'BLE OBD',
+              'name': name.isNotEmpty ? name : 'OBDII BLE Adapter',
+              'protocol': 'ELM327 BLE (Auto Detect)',
               'signal': r.rssi,
-              'recommended': false,
+              'recommended': true,
               'device': r.device,
             });
           }
